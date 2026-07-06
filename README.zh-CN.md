@@ -6,9 +6,12 @@
 
 一个 Claude Code 插件：让 Claude 把机械累活派给 [Codex CLI](https://github.com/openai/codex) 干——**只在你开口时才派**——派活前验收标准先冻结进 git，干完由一个独立的、没参与过的验收员判卷，FAIL 谁也推翻不了。
 
-[English →](README.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-blueviolet)](https://claude.com/claude-code) [![English](https://img.shields.io/badge/docs-English-blue)](README.md)
 
 ---
+
+<!-- HERO-GIF 槽位（发布前录制）：与英文版共用同一条真实终端录屏（终端输出本来就是英文，
+     不造假的本地化演示）。GIF 下方配一行中文说明即可。 -->
 
 ## 为什么要它
 
@@ -22,9 +25,9 @@
 /plugin install praetor
 ```
 
-就这一步。**零配置。** 你机器上 `codex login` 能用，派活就能用。没有配置文件、没有向导、不需要把任何 API key 交给我们——插件只调用你本机已登录的 Codex CLI。
+就这一步。**零配置。常驻仅 ~313 token**——在你真正派活之前，这就是它的全部开销。你机器上 `codex login` 能用，派活就能用。没有配置文件、没有向导、不需要把任何 API key 交给我们——插件只调用你本机已登录的 Codex CLI。
 
-前置：[Claude Code](https://claude.com/claude-code) + [Codex CLI](https://github.com/openai/codex)（`npm i -g @openai/codex` 然后 `codex login`）。
+前置：[Claude Code](https://claude.com/claude-code) + [Codex CLI](https://github.com/openai/codex)（`npm i -g @openai/codex` 然后 `codex login`）。国内网络装 npm 包建议配镜像（如 npmmirror）；`codex login` 需要能访问 OpenAI，或直接用你已配好的中转站 config.toml。
 
 ## 中转站 / 自定义模型用户（先说你们最关心的）
 
@@ -56,17 +59,46 @@
    → 清理 + 记一行台账
 ```
 
-三条铁律，无例外：**验收标准不进 git 不许派 · 验收员不点头不许收 · 重试最多 2 次然后大声接管。** 静默失败是这类工具的头号死因——这里每条失败路径的终点都是"Claude 自己把活干了，并明确告诉你委派失败了"。
+**三条铁律，无例外：**
+
+1. **验收标准不进 git，不许派。**
+2. **验收员不点头，不许收。FAIL 谁也推翻不了**——Claude 不行，看起来再漂亮的 diff 也不行。
+3. **重试最多 2 次，然后大声接管。** 每条失败路径的终点都是"Claude 自己把活干完，并明确告诉你委派失败了"。
+
+静默失败是这类工具的头号死因——在这里它无路可走。
 
 ## 实测，不吹牛
 
-README 里的数字全部来自本地反复实测（派 vs 不派的耗时、token 对比）：
+README 里的数字全部来自本地反复实测。每行一类任务：派 vs 不派的耗时、token 对比，以及验收员首判通过率（数据以英文版为准，两版同步更新）：
 
 | 任务类型 | Claude 单干 | 派给 Codex | 结论 |
 |---|---|---|---|
 | _实测进行中——数据没测出来之前，这张表不填，牛也不吹_ | | | |
 
 派活有固定开销（开分支+冻结+验收）。**小活派了反而慢**——skill 会直说，而不是硬派。
+
+## 跟同类工具的区别
+
+Claude↔Codex 桥不止我们一家，各有所长。摆事实：
+
+| | 谁决定派活 | 谁验收结果 | 要配什么 |
+|---|---|---|---|
+| **praetor** | 你，明说才派——绝不自动 | 独立验收员，FAIL 不可推翻 | 零配置（常驻 ~313 token） |
+| [codex-plugin-cc](https://github.com/openai/codex-plugin-cc) | 你，敲 /codex 命令 | 你自己读结果 | Codex CLI 登录 |
+| [skill-codex](https://github.com/skills-directory/skill-codex) | Claude，skill 触发就派 | 你自己读结果 | Codex CLI + 模型参数 |
+| [architect-loop](https://github.com/DanMcInerney/architect-loop) | 流水线内自动 | 流水线内置闸门 | 安装器 + 编排配置 |
+
+## 常见问题
+
+**我的什么东西会离开我的机器？你们能看到什么？** 什么都不会到我们这。插件只调用你本机已登录的 Codex CLI——你的 key、你的中转站、你的额度，全在你手里。
+
+**Codex 干砸了会怎样？** 对着冻结的验收标准最多重试 2 次，然后 Claude 大声接管自己干。不存在"悄悄失败装成功"这条路。
+
+**我（或 Claude）能推翻 FAIL 吗？** 不能。这就是本产品。想要"可以商量的验收员"，请看 [docs/DESIGN.md](docs/DESIGN.md) 里我们为什么不做。
+
+**它会不会没经我允许就派活？** 绝不会。Claude 最多提一句建议，你点头活才动。
+
+**中转站接的模型比较弱会怎么样？** 苦力越弱只会"接管次数变多"，**绝不会坏代码悄悄混进去**——验收闸门不挑模型。
 
 ## 我们故意不做的
 
