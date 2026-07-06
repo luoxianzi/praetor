@@ -1,0 +1,10 @@
+{
+  "name": "codex-dispatch",
+  "owner": { "name": "liangnoise" },
+  "plugins": [
+    {
+      "name": "codex-dispatch",
+      "source": "./"
+    }
+  ]
+}

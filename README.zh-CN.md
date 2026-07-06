@@ -37,7 +37,7 @@
 ```
 "这个交给codex"  ·  "派给codex干"  ·  "send this to codex"
 
-/delegate 把 src/ 里所有 moment 日期格式化迁移到 dayjs
+/codex-dispatch:delegate 把 src/ 里所有 moment 日期格式化迁移到 dayjs
 ```
 
 之后发生的事（生命周期）：

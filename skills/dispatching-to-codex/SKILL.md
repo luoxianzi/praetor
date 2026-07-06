@@ -22,7 +22,7 @@ Bad dispatches: design work, subtle debugging, anything ambiguous, tiny tasks.
 
 ## Lifecycle
 
-0. **Preflight.** Run `${CLAUDE_PLUGIN_ROOT}/scripts/preflight.sh`. Not ready → one-line explanation (e.g. "run `codex login` once and I can dispatch"), then do the work yourself. Never nag twice in a session.
+0. **Preflight.** Run `${CLAUDE_SKILL_DIR}/preflight.sh`. Not ready → one-line explanation (e.g. "run `codex login` once and I can dispatch"), then do the work yourself. Never nag twice in a session.
 
 **Analysis-only shortcut:** if the dispatch edits NO files (wide read-and-report, investigation), skip ISOLATE/FREEZE/JUDGE — run `codex exec --sandbox read-only` and review the report yourself. The gate exists for merges, not for reading. Everything below is the write path.
 

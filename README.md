@@ -31,7 +31,7 @@ Say it in plain language, or use the command:
 ```
 "send this to codex"  ·  "delegate the refactor to codex"  ·  "交给codex"
 
-/delegate migrate all date formatting in src/ from moment to dayjs
+/codex-dispatch:delegate migrate all date formatting in src/ from moment to dayjs
 ```
 
 What happens next (the lifecycle):
