@@ -1,9 +1,9 @@
 {
-  "name": "codex-dispatch",
+  "name": "praetor",
   "owner": { "name": "liangnoise" },
   "plugins": [
     {
-      "name": "codex-dispatch",
+      "name": "praetor",
       "source": "./"
     }
   ]

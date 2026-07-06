@@ -1,6 +1,8 @@
-# codex-dispatch
+# praetor
 
 **Claude 当大脑，Codex 当双手。合不合并，由一个不吃人情的验收员说了算。**
+
+*罗马执政官 praetor：兵权与裁判权集于一身——正如本插件：指挥军团出征，判决即是法律。*
 
 一个 Claude Code 插件：让 Claude 把机械累活派给 [Codex CLI](https://github.com/openai/codex) 干——**只在你开口时才派**——派活前验收标准先冻结进 git，干完由一个独立的、没参与过的验收员判卷，FAIL 谁也推翻不了。
 
@@ -17,7 +19,7 @@
 ## 安装
 
 ```
-/plugin install codex-dispatch
+/plugin install praetor
 ```
 
 就这一步。**零配置。** 你机器上 `codex login` 能用，派活就能用。没有配置文件、没有向导、不需要把任何 API key 交给我们——插件只调用你本机已登录的 Codex CLI。
@@ -37,7 +39,7 @@
 ```
 "这个交给codex"  ·  "派给codex干"  ·  "send this to codex"
 
-/codex-dispatch:delegate 把 src/ 里所有 moment 日期格式化迁移到 dayjs
+/praetor:delegate 把 src/ 里所有 moment 日期格式化迁移到 dayjs
 ```
 
 之后发生的事（生命周期）：

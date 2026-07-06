@@ -1,8 +1,8 @@
 {
-  "name": "codex-dispatch",
+  "name": "praetor",
   "version": "0.1.0",
-  "description": "Claude plans, Codex executes — explicit, verified delegation of grunt work to the Codex CLI, guarded by a binding fresh-context judge.",
+  "description": "Command the legion, judge the work — Claude plans, Codex executes, and a binding fresh-context judge decides what merges. Zero config.",
   "author": { "name": "liangnoise" },
   "license": "MIT",
-  "keywords": ["codex", "delegation", "claude-code", "gpt-5.5", "verification", "multi-agent"]
+  "keywords": ["codex", "delegation", "claude-code", "gpt-5.5", "verification", "multi-agent", "code-review"]
 }

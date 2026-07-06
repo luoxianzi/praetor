@@ -1,6 +1,8 @@
-# codex-dispatch
+# praetor
 
 **Claude plans. Codex executes. A judge you can't sweet-talk decides what merges.**
+
+*The Roman praetor held both imperium — the power to command the legions — and the judgment seat. So does this plugin: command the legion, judge the work.*
 
 A Claude Code plugin that lets Claude hand grunt work to the [Codex CLI](https://github.com/openai/codex) — **only when you say so** — with acceptance criteria frozen in git before Codex starts, and an independent fresh-context judge whose FAIL cannot be overridden.
 
@@ -17,7 +19,7 @@ A Claude Code plugin that lets Claude hand grunt work to the [Codex CLI](https:/
 ## Install
 
 ```
-/plugin install codex-dispatch
+/plugin install praetor
 ```
 
 That's it. **Zero configuration.** If `codex login` works on your machine, dispatch works. No config file, no wizard, no API keys handed to us — the plugin only shells out to your own authenticated Codex CLI.
@@ -31,7 +33,7 @@ Say it in plain language, or use the command:
 ```
 "send this to codex"  ·  "delegate the refactor to codex"  ·  "交给codex"
 
-/codex-dispatch:delegate migrate all date formatting in src/ from moment to dayjs
+/praetor:delegate migrate all date formatting in src/ from moment to dayjs
 ```
 
 What happens next (the lifecycle):
@@ -66,7 +68,7 @@ Already pointing your Codex CLI at a relay or another model via `~/.codex/config
 
 Officially recommended and tested path: **Codex `gpt-5.5` at `xhigh` effort.** Everything else: supported, not certified.
 
-Escape hatches (that's all of them): `CODEX_DISPATCH_MODEL` / `CODEX_DISPATCH_EFFORT` env vars, and plain language — "don't send this to codex", "stop delegating for now". A `STOP` file in the repo root halts everything.
+Escape hatches (that's all of them): `PRAETOR_MODEL` / `PRAETOR_EFFORT` env vars, and plain language — "don't send this to codex", "stop delegating for now". A `STOP` file in the repo root halts everything.
 
 ## What's deliberately NOT here
 

@@ -1,4 +1,4 @@
-# Design — codex-dispatch
+# Design — praetor
 
 > The decisions, the reasons, and the things we deliberately said no to.
 > Product owner: liangnoise. Design finalized 2026-07-06 after two research rounds
@@ -41,7 +41,7 @@ Kill switch: `STOP` file in repo root, checked by preflight before every dispatc
 
 Config file (any) · model picker UI · per-project overrides · concurrency knob (fixed 1) · configurable retries (fixed 2) · background daemon/broker · session transfer · dashboards/telemetry · auto-dispatch mode · Cursor/Copilot ports before the Claude Code loop is proven.
 
-Escape hatches kept (all three): user's own codex config.toml (auto-respected) · `CODEX_DISPATCH_MODEL`/`CODEX_DISPATCH_EFFORT` env vars · plain-language per-task control ("don't send this to codex" / "stop delegating for now").
+Escape hatches kept (all three): user's own codex config.toml (auto-respected) · `PRAETOR_MODEL`/`PRAETOR_EFFORT` env vars · plain-language per-task control ("don't send this to codex" / "stop delegating for now").
 
 ## Launch plan (owner decision: GitHub only)
 
