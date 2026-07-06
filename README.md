@@ -69,7 +69,11 @@ Real numbers from repeated local runs are published here before anything else is
 
 | Task class | Claude solo | Dispatched | Verdict |
 |---|---|---|---|
-| _benchmarks in progress — this table ships with data, or the claim doesn't ship_ | | | |
+| Bulk mechanical edit — API rename across 16 files | ~1 min | ~4 min (2.6 min Codex + 1.4 min judge) | **Judge: PASS first try** (12-point review) — merged without reading the diff |
+| Tiny task — one-line function | seconds | 1.7 min — and the 1st attempt died at the 4-min timeout | **Don't dispatch small tasks.** The skill says so before you waste the minutes |
+| Unplanned bonus: transient stall | — | one 29-min zero-write hang → killed by the timeout law → retry succeeded in 2.6 min | **Loud takeover, never silent failure** — the law fired in real life |
+
+First published runs — n=1 per arm, synthetic fixtures, one machine; medians replace these as repetitions accumulate. Full honesty: **2 of 4 dispatch attempts stalled** on our test machine and were killed by the hard timeout; both retries succeeded, and the judge passed delivered work on the first review. Wall-clock favors solo on small fixtures — dispatch pays in **quota shift and verified merges**, not raw speed.
 
 Dispatch has real overhead (branch + freeze + judge). Small tasks are **faster without it** — the skill says so instead of dispatching anyway.
 
