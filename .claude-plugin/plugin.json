@@ -1,0 +1,8 @@
+{
+  "name": "codex-dispatch",
+  "version": "0.1.0",
+  "description": "Claude plans, Codex executes — explicit, verified delegation of grunt work to the Codex CLI, guarded by a binding fresh-context judge.",
+  "author": { "name": "liangnoise" },
+  "license": "MIT",
+  "keywords": ["codex", "delegation", "claude-code", "gpt-5.5", "verification", "multi-agent"]
+}
