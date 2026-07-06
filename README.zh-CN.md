@@ -22,7 +22,8 @@
 ## 安装
 
 ```
-/plugin install praetor
+/plugin marketplace add luoxianzi/praetor
+/plugin install praetor@praetor
 ```
 
 就这一步。**零配置。常驻仅 ~313 token**——在你真正派活之前，这就是它的全部开销。你机器上 `codex login` 能用，派活就能用。没有配置文件、没有向导、不需要把任何 API key 交给我们——插件只调用你本机已登录的 Codex CLI。

@@ -1,7 +1,7 @@
 # Design — praetor
 
 > The decisions, the reasons, and the things we deliberately said no to.
-> Product owner: liangnoise. Design finalized 2026-07-06 after two research rounds
+> Product owner: luoxianzi. Design finalized 2026-07-06 after two research rounds
 > (official codex-plugin-cc internals, competitor workflows, viral-skill patterns, failure-mode analysis).
 
 ## Mission

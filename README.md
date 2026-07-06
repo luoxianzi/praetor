@@ -24,7 +24,8 @@ A Claude Code plugin that lets Claude hand grunt work to the [Codex CLI](https:/
 ## Install
 
 ```
-/plugin install praetor
+/plugin marketplace add luoxianzi/praetor
+/plugin install praetor@praetor
 ```
 
 That's it. **Zero configuration.** Idle footprint: **~313 always-on tokens** — that is the entire cost until the moment you dispatch. If `codex login` works on your machine, dispatch works. No config file, no wizard, no API keys handed to us — the plugin only shells out to your own authenticated Codex CLI.
