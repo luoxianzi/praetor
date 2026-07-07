@@ -22,7 +22,9 @@ A Claude Code plugin that lets Claude hand grunt work to the [Codex CLI](https:/
 
 ## Why
 
-- **Your Claude tokens should buy judgment, not grunt work.** Bulk edits, mechanical test-writing, wide read-and-report analysis — these burn context and quota that Claude should spend on design and review. Codex runs them in its own process, on its own quota.
+**One commander, many soldiers.** Fable 5 is the strongest brain you can rent; GPT-5.5 is a tireless, efficient soldier. praetor wires them into an army: Claude holds the map and makes every judgment call — what to build, what to accept — while Codex grinds through the execution. When a big problem splits, Legion Mode puts **several soldiers on it at once, each owning one piece** (2.84× measured). Big problems stop being *long* problems.
+
+- **Your Claude tokens buy judgment, not grunt work.** Bulk edits, mechanical test-writing, wide read-and-report analysis — these burn context and quota that Claude should spend on design and review. Codex runs them in its own process, on its own quota — **your Fable 5 budget lasts dramatically longer, and its context stays clean for the hard thinking.**
 - **Delegation without verification is just hope.** That 1-in-3 failure rate above is exactly the work you'd otherwise have merged — so nothing merges here without a verdict.
 - **Dormant until you call it; autonomous once you do.** In a conversation where you never summon it, praetor does nothing — Claude Code works exactly as before. Say the word once ("use codex") and it holds command for the conversation: triaging, splitting legions, announcing each dispatch in one line. "Don't send this" pins a task; "stop delegating" ends its term; a `STOP` file halts everything.
 
@@ -112,7 +114,7 @@ Dispatch has real overhead (branch + freeze + judge). Small tasks are **faster w
 
 ## How praetor differs
 
-Other Claude↔Codex bridges exist and are good at what they do. The factual difference:
+Other Claude↔Codex bridges exist and are good at what they do. What no other bridge combines: **a commander-grade brain freely commanding efficient soldiers — in parallel when the job splits — with every result independently verified, and your premium tokens spent only on judgment.** The factual breakdown:
 
 | | Who decides to dispatch | What verifies the output | Config required |
 |---|---|---|---|
