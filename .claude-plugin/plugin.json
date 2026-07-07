@@ -1,7 +1,7 @@
 {
   "name": "praetor",
-  "version": "0.3.0",
-  "description": "Command the legion, judge the work — Claude auto-triages grunt work to Codex (announced before it moves), and a binding fresh-context judge decides what merges. Zero config.",
+  "version": "0.3.1",
+  "description": "Command the legion, judge the work — summon it once, then Claude auto-triages grunt work to Codex (announced before each move), and a binding fresh-context judge decides what merges. Zero config.",
   "author": {
     "name": "luoxianzi"
   },

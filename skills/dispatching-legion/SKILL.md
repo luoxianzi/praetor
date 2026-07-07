@@ -1,6 +1,6 @@
 ---
 name: dispatching-legion
-description: Use when a job splits into 2–5 genuinely independent, mechanical, checkable pieces with provably disjoint file footprints — praetor detects the split itself — or when the user asks for parallel dispatch ("dispatch these in parallel", "派几路codex一起干"). Auto-triage is the default — announce the muster table in ONE message, then run the legion; do not wait for permission. Standing brakes always win: plain-language veto or a STOP file halts everything. The real gate is disjointness, not permission: when in doubt about the partition, serialize with dispatching-to-codex instead.
+description: Use when praetor has been summoned this conversation (see dispatching-to-codex) AND a job splits into 2–5 genuinely independent, mechanical, checkable pieces with provably disjoint file footprints — the split is Fable's own call to detect and make; no extra permission beyond the summon. Announce the muster table in ONE message, then run the legion. Also triggers on an explicit ask ("dispatch these in parallel", "派几路codex一起干"), which counts as a summon. Standing brakes always win: plain-language veto or a STOP file halts everything. The real gate is disjointness: when in doubt about the partition, serialize with dispatching-to-codex instead.
 ---
 
 # Legion Mode — commanding many Codex workers

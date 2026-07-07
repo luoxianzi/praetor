@@ -6,7 +6,7 @@
 
 *The Roman praetor held both imperium — the power to command the legions — and the judgment seat. So does this plugin: command the legion, judge the work.*
 
-A Claude Code plugin that lets Claude hand grunt work to the [Codex CLI](https://github.com/openai/codex) — **triaged automatically, announced before it moves** — with acceptance criteria frozen in git before Codex starts, and an independent fresh-context judge whose FAIL cannot be overridden.
+A Claude Code plugin that lets Claude hand grunt work to the [Codex CLI](https://github.com/openai/codex) — **summon it once, then it triages on its own, announcing before each move** — with acceptance criteria frozen in git before Codex starts, and an independent fresh-context judge whose FAIL cannot be overridden.
 
 **Why a judge?** In our live testing, roughly **1 in 3 unattended executor runs failed independent review** — every one of them work you'd otherwise have merged.
 
@@ -24,7 +24,7 @@ A Claude Code plugin that lets Claude hand grunt work to the [Codex CLI](https:/
 
 - **Your Claude tokens should buy judgment, not grunt work.** Bulk edits, mechanical test-writing, wide read-and-report analysis — these burn context and quota that Claude should spend on design and review. Codex runs them in its own process, on its own quota.
 - **Delegation without verification is just hope.** That 1-in-3 failure rate above is exactly the work you'd otherwise have merged — so nothing merges here without a verdict.
-- **You stay in charge — without being the trigger.** praetor announces every dispatch in one line before it moves; "don't send this" pins a task to Claude for the session, and a `STOP` file halts everything. Consent is standing, not per-click.
+- **Dormant until you call it; autonomous once you do.** In a conversation where you never summon it, praetor does nothing — Claude Code works exactly as before. Say the word once ("use codex") and it holds command for the conversation: triaging, splitting legions, announcing each dispatch in one line. "Don't send this" pins a task; "stop delegating" ends its term; a `STOP` file halts everything.
 
 ## Install
 
@@ -43,15 +43,17 @@ Updating later: `claude plugin update praetor@praetor` — installed plugins sta
 
 ## Quick start
 
-Open Claude Code in any git repo and just work. The moment a task contains real grunt work — a 16-file rename, mechanical test-writing, a wide read-and-report — praetor triages it itself and announces in one line:
+Open Claude Code in any git repo and appoint the praetor — once per conversation, in plain words:
+
+```
+"use codex for the grunt work"  ·  "交给codex"  ·  /praetor:delegate <task>
+```
+
+From that word on, it holds command for the conversation. Real grunt work — a 16-file rename, mechanical test-writing, a wide read-and-report — gets triaged by praetor itself and announced in one line before it moves:
 
 > *Dispatching to Codex: migrate date formatting across src/ — bar frozen in git, ~4 min. Say the word to stop.*
 
-Codex grinds in a sandbox, on its own quota. A fresh-context judge re-runs the frozen checks and inspects the diff. On PASS, Claude commits and hands you the receipts; on FAIL, ≤2 retries, then Claude does the work itself and says so. **You don't do anything special — that's the point.** Explicit asks work too:
-
-```
-"send this to codex"  ·  "交给codex"  ·  /praetor:delegate migrate src/ from moment to dayjs
-```
+Codex grinds in a sandbox, on its own quota. A fresh-context judge re-runs the frozen checks and inspects the diff. On PASS, Claude commits and hands you the receipts; on FAIL, ≤2 retries, then Claude does the work itself and says so. If the job splits into independent pieces, praetor spots it and runs a parallel legion — no extra asking. **One summon is the only special thing you ever do.** And in conversations where you never summon it? praetor stays completely dormant.
 
 What happens next:
 
@@ -76,7 +78,7 @@ Silent failure is treated as the #1 killer of tools like this. It has no path he
 - **codex-judge** — the fresh-context judge: never saw the plan, runs the real commands, cannot be overridden
 
 **The guarantees**
-- **Announce-then-act** — every dispatch declared in one line before it moves; "don't send this" pins it to Claude, `STOP` halts all
+- **Summoned imperium** — dormant until called in the conversation; once summoned, it triages and dispatches on its own, always announcing first; "don't send this" pins a task, "stop delegating" ends the term, `STOP` halts all
 - **Frozen bar in git** — the definition of done is committed before Codex exists, and tamper-checked
 - **Loud takeover** — there is no silent-failure path
 - **Git-state boundary** — Codex edits files, never git; `.git` stays read-only by design
@@ -114,7 +116,7 @@ Other Claude↔Codex bridges exist and are good at what they do. The factual dif
 
 | | Who decides to dispatch | What verifies the output | Config required |
 |---|---|---|---|
-| **praetor** | Auto-triage — announced before it moves; standing opt-outs | Fresh-context judge; FAIL is binding | None (~313 tokens idle) |
+| **praetor** | Summon once per conversation → auto-triage, announced before each move | Fresh-context judge; FAIL is binding | None (~313 tokens idle) |
 | [codex-plugin-cc](https://github.com/openai/codex-plugin-cc) | You, via /codex commands | You read the result | Codex CLI auth |
 | [skill-codex](https://github.com/skills-directory/skill-codex) | Claude, when the skill triggers | You read the result | Codex CLI + model prompts |
 | [architect-loop](https://github.com/DanMcInerney/architect-loop) | Automatic within the loop | Gates + review inside the loop | Installer + orchestration setup |
@@ -135,7 +137,7 @@ Escape hatches (that's all of them): `PRAETOR_MODEL` / `PRAETOR_EFFORT` env vars
 
 **Can I (or Claude) override a FAIL?** No. That is the product. If you want an overridable judge, [docs/DESIGN.md](docs/DESIGN.md) explains why we won't build one.
 
-**Will it dispatch without me asking?** Yes — by design (since v0.3): praetor triages automatically and **announces before it moves**. Your brakes are standing, not per-click: "don't send this" pins a task to Claude for the session; "stop delegating for now" pauses; a `STOP` file halts everything. What it will never do: dispatch silently, merge without the judge, or touch git state.
+**Will it dispatch without me asking?** Not until you've summoned it in that conversation — before that it is completely dormant, and Claude Code behaves as if praetor weren't installed. After one summon ("use codex" / "交给codex" / `/praetor:delegate`), yes: it triages and dispatches on its own judgment — including legion splits — **always announcing before it moves**. Brakes are standing: "don't send this" pins a task; "stop delegating for now" ends its term; a `STOP` file halts everything. What it will never do: dispatch silently, merge without the judge, or touch git state.
 
 ## What's deliberately NOT here
 
