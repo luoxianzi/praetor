@@ -115,6 +115,7 @@ Overrides without any config file: `PRAETOR_MODEL` and `PRAETOR_EFFORT` env vars
 | Dispatch killed by timeout | Stall (network/relay hiccup) → praetor already retried; if repeated, check relay/proxy |
 | Judge FAIL: "check could not run" | Broken env (deps not installed) — a FAIL by design; install deps, re-dispatch |
 | Relay returns 400 on model name | Your relay maps names differently → praetor already drops model flags on custom config; check `model` in your config.toml |
+| Codex fails: `.git` is read-only | Working as designed — the sandbox (and praetor's law) keeps git state out of Codex's hands. If the task itself is git work (branch/pull/merge), don't dispatch it: that's Claude's own job. Never add `.git` to writable roots |
 | Everything works but feels slow on small tasks | Working as intended — the worth-it check told you; small tasks are faster solo |
 
 ## 8. Contribute your numbers

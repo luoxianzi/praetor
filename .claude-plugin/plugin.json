@@ -1,6 +1,6 @@
 {
   "name": "praetor",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Command the legion, judge the work — Claude plans, Codex executes, and a binding fresh-context judge decides what merges. Zero config.",
   "author": {
     "name": "luoxianzi"

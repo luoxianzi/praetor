@@ -37,11 +37,12 @@ CONTEXT: <repo path, key files, constraints — everything Codex needs, it canno
 DO: <numbered, concrete steps>
 VERIFY: <run the exact CHECKS above and show their real output>
 REPORT: <what to return: diff summary + which checks passed>
-DO NOT: commit anything; touch .codex/ACCEPTANCE.md; edit unrelated files;
+DO NOT: run ANY git command (git state is the planner's job); commit anything;
+        touch .codex/ACCEPTANCE.md; edit unrelated files;
         delete or weaken tests; add silent fallbacks or fake/stubbed results.
 ```
 
-The `DO NOT` block is mandatory and always includes those five items — they are the exact ways executor models paper over failure.
+The `DO NOT` block is mandatory and always includes those six items — they are the exact ways executor models paper over failure. (The sandbox keeps `.git/` read-only in `workspace-write`; that is a feature — never work around it by granting `.git` write access.)
 
 ## Common Mistakes
 

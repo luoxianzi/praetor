@@ -18,7 +18,7 @@ Claude is the brain; Codex is the hands. You plan, freeze the bar, and judge. Co
 Dispatch overhead is real: branch + freeze + judge ≈ 2–5 minutes of wall-clock (measured ~4 min; see the README benchmark table) plus some of both quotas. Rule of thumb: a task you could finish in under ~5 minutes is not worth dispatching. If so, tell the user plainly: *"This is faster for me to do directly — still want Codex on it?"* Then respect their answer.
 
 Good dispatches: bulk/repetitive edits, migrations, mechanical test-writing against a clear spec, wide "read everything, report back" analysis, output-heavy runs.
-Bad dispatches: design work, subtle debugging, anything ambiguous, tiny tasks.
+Bad dispatches: design work, subtle debugging, anything ambiguous, tiny tasks, and **any git-state operation** (branching, pulling, merging, rebasing, committing) — git is the planner's own hands; Codex edits files, never git state. Codex's sandbox keeps `.git/` read-only in `workspace-write` for exactly this reason.
 
 ## Lifecycle
 
@@ -55,5 +55,6 @@ Bad dispatches: design work, subtle debugging, anything ambiguous, tiny tasks.
 | "Codex said tests pass" | Codex reporting ≠ judge verifying. Only exit codes count. |
 | "It's just a small task, skip the branch" | Small tasks on main are how main breaks. Isolate or don't dispatch. |
 | "The tree is only a little dirty, skip the stash" | The judge would grade the user's WIP and a PASS-commit would swallow it. Stash or stop. |
+| "Codex's sandbox blocked `.git` writes — add `.git` to writable roots" | **Never.** `.git` read-only is the sandbox enforcing our own law (Codex never touches git state — writable `.git` = rewritable history and executable hooks). If the task needs git commands, it was never a valid dispatch: do the git work yourself. |
 | "This edit task is basically analysis" | If it changes any file, it's a write dispatch. The shortcut is for reading only. |
 | "User probably wants this delegated" | Probably ≠ said so. Offer in one line, then drop it. |
