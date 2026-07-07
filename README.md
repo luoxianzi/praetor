@@ -12,7 +12,7 @@ A Claude Code plugin that lets Claude hand grunt work to the [Codex CLI](https:/
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-blueviolet)](https://claude.com/claude-code) [![validate](https://github.com/luoxianzi/praetor/actions/workflows/validate.yml/badge.svg)](https://github.com/luoxianzi/praetor/actions/workflows/validate.yml) [![中文说明](https://img.shields.io/badge/文档-中文-red)](README.zh-CN.md)
 
-[Tutorial](docs/TUTORIAL.md) · [Install](#install) · [Quick start](#quick-start) · [What's inside](#whats-inside) · [Measured, not promised](#measured-not-promised) · [How praetor differs](#how-praetor-differs) · [FAQ](#faq)
+[Tutorial](docs/TUTORIAL.md) · [Install](#install) · [Quick start](#quick-start) · [What's inside](#whats-inside) · [Legion Mode](#legion-mode--many-workers-in-parallel) · [Measured](#measured-not-promised) · [How praetor differs](#how-praetor-differs) · [FAQ](#faq)
 
 ---
 
@@ -22,11 +22,19 @@ A Claude Code plugin that lets Claude hand grunt work to the [Codex CLI](https:/
 
 ## Why
 
-**One commander, many soldiers.** Fable 5 is the strongest brain you can rent; GPT-5.5 is a tireless, efficient soldier. praetor wires them into an army: Claude holds the map and makes every judgment call — what to build, what to accept — while Codex grinds through the execution. When a big problem splits, Legion Mode puts **several soldiers on it at once, each owning one piece** (2.84× measured). Big problems stop being *long* problems.
+**One commander, many soldiers.** Fable 5 is the strongest brain you can rent; GPT-5.5 is a tireless, efficient soldier. praetor wires them into an army: Claude holds the map and makes every judgment call — what to build, what to accept — while Codex grinds through the execution. When a big problem splits, Legion Mode puts **several soldiers on it at once, each owning one piece**.
+
+Big problems stop being *long* problems.
 
 - **Your Claude tokens buy judgment, not grunt work.** Bulk edits, mechanical test-writing, wide read-and-report analysis — these burn context and quota that Claude should spend on design and review. Codex runs them in its own process, on its own quota — **your Fable 5 budget lasts dramatically longer, and its context stays clean for the hard thinking.**
-- **Delegation without verification is just hope.** That 1-in-3 failure rate above is exactly the work you'd otherwise have merged — so nothing merges here without a verdict.
-- **Dormant until you call it; autonomous once you do.** In a conversation where you never summon it, praetor does nothing — Claude Code works exactly as before. Say the word once ("use codex") and it holds command for the conversation: triaging, splitting legions, announcing each dispatch in one line. "Don't send this" pins a task; "stop delegating" ends its term; a `STOP` file halts everything.
+- **Delegation without verification is just hope.** So nothing merges here without a verdict.
+- **Dormant until you call it; autonomous once you do.** In a conversation where you never summon it, praetor does nothing — Claude Code works exactly as before. Say the word once ("use codex") and it holds command for the conversation, triaging and splitting legions on its own. "Don't send this" pins a task; "stop delegating" ends its term; a `STOP` file halts everything.
+
+**Three iron laws — no exceptions:**
+
+1. **No dispatch without a frozen bar in git.**
+2. **No acceptance without the judge.** A FAIL cannot be overridden — not by Claude, not by a persuasive diff.
+3. **Max 2 retries, then loud takeover.** Every failure path ends with Claude doing the work and telling you delegation failed.
 
 ## Install
 
@@ -51,7 +59,7 @@ Open Claude Code in any git repo and appoint the praetor — once per conversati
 "use codex for the grunt work"  ·  "交给codex"  ·  /praetor:delegate <task>
 ```
 
-From that word on, it holds command for the conversation. Real grunt work — a 16-file rename, mechanical test-writing, a wide read-and-report — gets triaged by praetor itself and announced in one line before it moves:
+From that word on, it holds command — real grunt work (a 16-file rename, mechanical test-writing, a wide read-and-report) gets triaged and dispatched by praetor itself:
 
 > *Dispatching to Codex: migrate date formatting across src/ — bar frozen in git, ~4 min. Say the word to stop.*
 
@@ -63,28 +71,20 @@ What happens next:
 
 *Every state, with the real artifacts (frozen bar, verdict, one real failure): the [tutorial](docs/TUTORIAL.md).*
 
-**Three iron laws — no exceptions:**
-
-1. **No dispatch without a frozen bar in git.**
-2. **No acceptance without the judge.** A FAIL cannot be overridden — not by Claude, not by a persuasive diff.
-3. **Max 2 retries, then loud takeover.** Every failure path ends with Claude doing the work and telling you delegation failed.
-
-Silent failure is treated as the #1 killer of tools like this. It has no path here.
-
 ## What's inside
 
 **The lifecycle**
 - **dispatching-to-codex** — the full loop: auto-triage → frozen bar → sandboxed exec → binding judge → commit or loud takeover
-- **dispatching-legion** — 2–5 parallel workers in git worktrees, may-touch manifests, ordered merge, mandatory integration judge (**2.84× measured**)
+- **dispatching-legion** — 2–5 parallel workers in git worktrees, may-touch manifests, ordered merge, mandatory integration judge
 - **writing-codex-briefs** — self-contained briefs + acceptance bars that actually protect you (red→green checks, exit codes, manifests)
 - **codex-judge** — the fresh-context judge: never saw the plan, runs the real commands, cannot be overridden
 
 **The guarantees**
-- **Summoned imperium** — dormant until called in the conversation; once summoned, it triages and dispatches on its own, always announcing first; "don't send this" pins a task, "stop delegating" ends the term, `STOP` halts all
+- **Dormant until summoned** — then it triages and dispatches on its own, always announcing first; "don't send this" pins a task, "stop delegating" ends the term, `STOP` halts all
 - **Frozen bar in git** — the definition of done is committed before Codex exists, and tamper-checked
 - **Loud takeover** — there is no silent-failure path
 - **Git-state boundary** — Codex edits files, never git; `.git` stays read-only by design
-- **Zero config** — ~313 idle tokens; relay configs auto-respected; two env vars if you must
+- **Zero config** — relay configs auto-respected; two env vars if you must
 
 ## Legion Mode — many workers, in parallel
 
@@ -98,7 +98,7 @@ Design rationale + live combat results (2.84× measured, and the trap the judge 
 
 ## Measured, not promised
 
-Real numbers from repeated local runs are published here before anything else is claimed. Each row: one task class, wall-clock and token cost of *dispatch vs. Claude doing it directly*, and the judge's first-pass verdict rate:
+Each row: one task class — *dispatch vs. Claude doing it directly* — wall-clock and the judge's verdict:
 
 | Task class | Claude solo | Dispatched | Verdict |
 |---|---|---|---|
@@ -108,9 +108,7 @@ Real numbers from repeated local runs are published here before anything else is
 | **Legion (v0.2): 3 parallel implementations** | ~6 min serial est. | **2 m 08 s wall — 2.84× speedup** | 3/3 judges PASS first try · zero-conflict merge · **integration judge PASS** |
 | **Legion trap: brief lured the worker outside its manifest** | — | worker complied, tests green | **Judge FAILed the green-tests lane**, naming the exact file — [full combat report](docs/LEGION.md) |
 
-First published runs — n=1 per arm, synthetic fixtures, one machine; medians replace these as repetitions accumulate. Full honesty: **2 of 4 dispatch attempts stalled** on our test machine and were killed by the hard timeout; both retries succeeded, and the judge passed delivered work on the first review. Wall-clock favors solo on small fixtures — dispatch pays in **quota shift and verified merges**, not raw speed.
-
-Dispatch has real overhead (branch + freeze + judge). Small tasks are **faster without it** — the skill says so instead of dispatching anyway.
+First runs, n=1 per arm — medians as repetitions accumulate. In full honesty: **2 of 4 early dispatch attempts stalled** and were killed by the timeout law; both retries succeeded. Dispatch has real overhead (branch + freeze + judge): small tasks are **faster without it**, and the skill says so instead of dispatching anyway.
 
 ## How praetor differs
 
@@ -139,11 +137,13 @@ Escape hatches (that's all of them): `PRAETOR_MODEL` / `PRAETOR_EFFORT` env vars
 
 **Can I (or Claude) override a FAIL?** No. That is the product. If you want an overridable judge, [docs/DESIGN.md](docs/DESIGN.md) explains why we won't build one.
 
+**Will a weaker Codex model (via a relay) let bad code merge?** No. The judge protects quality regardless of executor strength — a weaker model means more retries and takeovers, never silently bad merges.
+
 **Will it dispatch without me asking?** Not until you've summoned it in that conversation — before that it is completely dormant, and Claude Code behaves as if praetor weren't installed. After one summon ("use codex" / "交给codex" / `/praetor:delegate`), yes: it triages and dispatches on its own judgment — including legion splits — **always announcing before it moves**. Brakes are standing: "don't send this" pins a task; "stop delegating for now" ends its term; a `STOP` file halts everything. What it will never do: dispatch silently, merge without the judge, or touch git state.
 
 ## What's deliberately NOT here
 
-No config file. No model picker. No concurrency knobs. No background daemon. No dashboards. Retries are fixed at 2 — it's a tested law, not a preference. Every one of these was cut on purpose; see [docs/DESIGN.md](docs/DESIGN.md) before filing the issue. 🙂
+No config file. No model picker. No concurrency knobs. No background daemon. No dashboards. Retries are fixed at 2 — it's a tested law, not a preference. Every one of these was cut on purpose; see [docs/DESIGN.md](docs/DESIGN.md) before filing the issue.
 
 ## Acknowledgements
 

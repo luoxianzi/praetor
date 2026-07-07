@@ -17,7 +17,7 @@ That's the entire setup. praetor itself needs zero configuration. (Windows: ever
 /plugin install praetor@praetor
 ```
 
-Check it landed: `/plugin` → praetor should list 3 skills (`delegate`, `dispatching-to-codex`, `writing-codex-briefs`) and 1 agent (`codex-judge`). Idle cost from here: ~313 tokens per session, nothing else until you dispatch.
+Check it landed: `/plugin` → praetor should list its skills (`dispatching-to-codex`, `dispatching-legion`, `writing-codex-briefs`, plus the `delegate` command) and the `codex-judge` agent. Idle cost from here: ~313 tokens per session, nothing else until you dispatch.
 
 ## 2. Your first dispatch, end to end
 

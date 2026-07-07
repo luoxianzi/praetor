@@ -17,7 +17,7 @@
 /plugin install praetor@praetor
 ```
 
-验证装好了：`/plugin` 里 praetor 应显示 3 个 skill（`delegate`、`dispatching-to-codex`、`writing-codex-briefs`）+ 1 个验收员 agent（`codex-judge`）。装完常驻仅 ~313 token，不派活就没有别的开销。
+验证装好了：`/plugin` 里 praetor 应显示全部 skill（`dispatching-to-codex`、`dispatching-legion`、`writing-codex-briefs`，外加 `delegate` 命令）+ 1 个验收员 agent（`codex-judge`）。装完常驻仅 ~313 token，不派活就没有别的开销。
 
 ## 2. 第一次派活，全程拆解
 

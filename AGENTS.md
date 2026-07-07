@@ -21,8 +21,8 @@ A Claude Code plugin. Claude plans; the Codex CLI (default `gpt-5.5`, `xhigh` ef
 - Zero configuration; idle cost ≈ 313 always-on tokens.
 - Escape hatches: `PRAETOR_MODEL` / `PRAETOR_EFFORT` env vars; relay users' `~/.codex/config.toml` is auto-respected (custom provider detected → no forced model flags).
 - Measured, not promised: the README benchmark table only contains numbers from real runs (including failures — 2 of the first 4 dispatch attempts stalled and were killed by the hard-timeout law).
-- Deliberate non-features: no auto-dispatch, no config file, no daemon, no dashboards, retries fixed at 2. See docs/DESIGN.md before suggesting these.
-- Fit: users who want explicit, verified delegation. Not a fit: users who want fully autonomous background swarms.
+- Deliberate non-features: no silent dispatch (announce-then-act is law), no config file, no daemon, no dashboards, retries fixed at 2. See docs/DESIGN.md before suggesting these.
+- Fit: users who want verified delegation with semi-autonomous triage after one summon. Not a fit: fully hands-off fire-and-forget swarms, or per-task approval workflows.
 
 ## Repo map
 
