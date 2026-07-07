@@ -39,6 +39,8 @@ Requirements: [Claude Code](https://claude.com/claude-code) + [Codex CLI](https:
 
 New here? The **[10-minute tutorial](docs/TUTORIAL.md)** walks a real dispatch end to end — the frozen bar, the verdict, and one real failure.
 
+Updating later: `claude plugin update praetor@praetor` — installed plugins stay on their installed version until you update (by design), so grab fixes explicitly.
+
 ## Use
 
 Say it in plain language, or use the command:
@@ -109,6 +111,10 @@ Escape hatches (that's all of them): `PRAETOR_MODEL` / `PRAETOR_EFFORT` env vars
 ## What's deliberately NOT here
 
 No config file. No model picker. No concurrency knobs. No background daemon. No dashboards. Retries are fixed at 2 — it's a tested law, not a preference. Every one of these was cut on purpose; see [docs/DESIGN.md](docs/DESIGN.md) before filing the issue. 🙂
+
+## Acknowledgements
+
+praetor's discipline patterns — iron laws with no-exceptions clauses, red-flag excuse tables, skills that trigger on "Use when…" — tip their helmet to [obra/superpowers](https://github.com/obra/superpowers). The craft was studied; no code or text was copied.
 
 ## License
 

@@ -33,3 +33,9 @@ jobs:
           grep -q 'FAIL cannot be overridden' skills/dispatching-to-codex/SKILL.md
           grep -qi 'frozen' skills/dispatching-to-codex/SKILL.md
           grep -qiE 'max 2|2 retries|retries.*2' skills/dispatching-to-codex/SKILL.md
+
+      - name: Git-state boundary is intact (v0.1.2 law)
+        run: |
+          grep -q 'git-state operation' skills/dispatching-to-codex/SKILL.md
+          grep -q 'writable roots' skills/dispatching-to-codex/SKILL.md
+          grep -q 'run ANY git command' skills/writing-codex-briefs/SKILL.md
