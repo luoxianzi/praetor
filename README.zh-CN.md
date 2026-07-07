@@ -6,7 +6,11 @@
 
 一个 Claude Code 插件：让 Claude 把机械累活派给 [Codex CLI](https://github.com/openai/codex) 干——**只在你开口时才派**——派活前验收标准先冻结进 git，干完由一个独立的、没参与过的验收员判卷，FAIL 谁也推翻不了。
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-blueviolet)](https://claude.com/claude-code) [![English](https://img.shields.io/badge/docs-English-blue)](README.md)
+**为什么非要验收员？** 实测约 **1/3** 的无人值守执行结果过不了独立审查——每一份，都是你本来会直接合进去的代码。
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-blueviolet)](https://claude.com/claude-code) [![validate](https://github.com/luoxianzi/praetor/actions/workflows/validate.yml/badge.svg)](https://github.com/luoxianzi/praetor/actions/workflows/validate.yml) [![English](https://img.shields.io/badge/docs-English-blue)](README.md)
+
+[安装](#安装) · [怎么用](#怎么用) · [实测，不吹牛](#实测不吹牛) · [跟同类工具的区别](#跟同类工具的区别) · [常见问题](#常见问题)
 
 ---
 
@@ -17,7 +21,7 @@
 ## 为什么要它
 
 - **Claude 的额度应该花在判断上，不是搬砖上。** 批量改代码、机械写测试、大面积读代码出报告——这些活烧上下文、烧额度。派给 Codex，用它自己的进程、它自己的额度跑。
-- **没有验收的委派只是许愿。** 实测约 **1/3** 的无人值守执行结果过不了独立审查——那正是你本来会直接合进去的坏代码。所以这里没有验收员点头，什么都合不进去。
+- **没有验收的委派只是许愿。** 上面那个 1/3，就是你本来会直接合进主干的代码——所以这里没有验收员点头，什么都合不进去。
 - **你说了算。** 本插件**绝不自动派活**。Claude 最多提一句"这活挺适合 Codex，要派吗？"——你不点头，活不动。
 
 ## 安装

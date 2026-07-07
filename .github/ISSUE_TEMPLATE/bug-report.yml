@@ -1,0 +1,39 @@
+name: Bug report
+description: Something broke — a dispatch, the judge, preflight, or the docs
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What did you ask for, and what did praetor do instead?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: input
+    id: codex-version
+    attributes:
+      label: Codex CLI version
+      description: Output of `codex --version`
+      placeholder: codex-cli 0.142.5
+    validations:
+      required: true
+  - type: dropdown
+    id: config
+    attributes:
+      label: Codex config
+      options:
+        - Stock (official OpenAI login)
+        - Custom relay / provider in ~/.codex/config.toml
+    validations:
+      required: true
+  - type: textarea
+    id: preflight
+    attributes:
+      label: Preflight output
+      description: What `skills/dispatching-to-codex/preflight.sh` prints in your repo (redact anything private)

@@ -1,0 +1,49 @@
+name: Benchmark / dispatch report
+description: Post a real run — timings, verdicts, stalls. This is how the README table grows from n=1 to medians.
+labels: ["benchmark"]
+body:
+  - type: dropdown
+    id: task-class
+    attributes:
+      label: Task class
+      options:
+        - Bulk mechanical edit (many files, one rule)
+        - Wide read-and-report analysis
+        - Test scaffolding / mechanical test-writing
+        - Tiny task (should probably not have been dispatched)
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: task
+    attributes:
+      label: What was dispatched
+      description: The task in one or two lines (redact anything private)
+    validations:
+      required: true
+  - type: textarea
+    id: numbers
+    attributes:
+      label: Numbers
+      description: "Wall-clock for dispatch (Codex + judge) vs doing it directly; retries; stalls/timeouts if any"
+      placeholder: |
+        Codex: 2m40s · judge: 1m20s · solo estimate: ~1m
+        Attempt 1 stalled at 8m timeout, retry succeeded
+    validations:
+      required: true
+  - type: dropdown
+    id: verdict
+    attributes:
+      label: Final outcome
+      options:
+        - Judge PASS, first try
+        - Judge PASS after retry
+        - Judge FAIL → loud takeover
+        - Timeout/stall → loud takeover
+    validations:
+      required: true
+  - type: textarea
+    id: transcript
+    attributes:
+      label: Transcript snippet (optional)
+      description: The judge's verdict block or the takeover message — the receipts

@@ -6,7 +6,11 @@
 
 A Claude Code plugin that lets Claude hand grunt work to the [Codex CLI](https://github.com/openai/codex) — **only when you say so** — with acceptance criteria frozen in git before Codex starts, and an independent fresh-context judge whose FAIL cannot be overridden.
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-blueviolet)](https://claude.com/claude-code) [![中文说明](https://img.shields.io/badge/文档-中文-red)](README.zh-CN.md)
+**Why a judge?** In our live testing, roughly **1 in 3 unattended executor runs failed independent review** — every one of them work you'd otherwise have merged.
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-blueviolet)](https://claude.com/claude-code) [![validate](https://github.com/luoxianzi/praetor/actions/workflows/validate.yml/badge.svg)](https://github.com/luoxianzi/praetor/actions/workflows/validate.yml) [![中文说明](https://img.shields.io/badge/文档-中文-red)](README.zh-CN.md)
+
+[Install](#install) · [Use](#use) · [Measured, not promised](#measured-not-promised) · [How praetor differs](#how-praetor-differs) · [FAQ](#faq)
 
 ---
 
@@ -17,7 +21,7 @@ A Claude Code plugin that lets Claude hand grunt work to the [Codex CLI](https:/
 ## Why
 
 - **Your Claude tokens should buy judgment, not grunt work.** Bulk edits, mechanical test-writing, wide read-and-report analysis — these burn context and quota that Claude should spend on design and review. Codex runs them in its own process, on its own quota.
-- **Delegation without verification is just hope.** In our live testing, roughly **1 in 3 unattended executor runs failed independent review** — that's the work you'd otherwise have merged. So nothing merges here without a verdict.
+- **Delegation without verification is just hope.** That 1-in-3 failure rate above is exactly the work you'd otherwise have merged — so nothing merges here without a verdict.
 - **You stay in charge.** This plugin never auto-dispatches. Claude may *offer* ("this looks Codex-shaped — want me to dispatch it?") — the work only moves when you say yes.
 
 ## Install
