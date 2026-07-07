@@ -4,11 +4,9 @@
 
 **Claude plans. Codex executes. A judge you can't sweet-talk decides what merges.**
 
-*The Roman praetor held both imperium — the power to command the legions — and the judgment seat. So does this plugin: command the legion, judge the work.*
-
 A Claude Code plugin that lets Claude hand grunt work to the [Codex CLI](https://github.com/openai/codex) — **summon it once, then it triages on its own, announcing before each move** — with acceptance criteria frozen in git before Codex starts, and an independent fresh-context judge whose FAIL cannot be overridden.
 
-**Why a judge?** In our live testing, roughly **1 in 3 unattended executor runs failed independent review** — every one of them work you'd otherwise have merged.
+**Why a judge?** In our live testing, roughly **1 in 3 unattended executor runs failed independent review** — every one of them work you'd otherwise have merged on faith. [The full story →](docs/WHY-A-JUDGE.md)
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-blueviolet)](https://claude.com/claude-code) [![validate](https://github.com/luoxianzi/praetor/actions/workflows/validate.yml/badge.svg)](https://github.com/luoxianzi/praetor/actions/workflows/validate.yml) [![中文说明](https://img.shields.io/badge/文档-中文-red)](README.zh-CN.md)
 
@@ -19,6 +17,21 @@ A Claude Code plugin that lets Claude hand grunt work to the [Codex CLI](https:/
 ![praetor in action — replay of real runs](docs/assets/demo.gif)
 
 *Replay of real runs — every number and verdict above comes from the benchmark table below, including the timeout kill. Reproduce it: `vhs docs/assets/demo.tape`.*
+
+## Green tests don't grant absolution
+
+A Legion worker built a feature. Tests: **all green.** Code: **functionally correct.** The judge — fresh context, never saw the plan, only the frozen criteria and the diff — failed it anyway:
+
+```
+VERDICT: FAIL — NOTES.md modified outside manifest scope src/delta/**
+```
+
+It had edited one file outside its manifest. Passing tests, correct-looking code — rejected, and rejected *correctly.* That is the whole product: **delegation without verification is just hope.** [Why a fresh-context judge is the only fix →](docs/WHY-A-JUDGE.md)
+
+**What praetor is _not_:**
+- Not a way to write code *faster* — a way to *not merge* delegated work that only looks done.
+- Not autonomous-everything — you approve the criteria; the judge only enforces them.
+- Not magic — the [benchmark](#measured-not-promised) below **includes our failures on purpose:** 2 of 4 early dispatches stalled and were killed by the timeout law. We left them in.
 
 ## Why
 
@@ -144,6 +157,10 @@ Escape hatches (that's all of them): `PRAETOR_MODEL` / `PRAETOR_EFFORT` env vars
 ## What's deliberately NOT here
 
 No config file. No model picker. No concurrency knobs. No background daemon. No dashboards. Retries are fixed at 2 — it's a tested law, not a preference. Every one of these was cut on purpose; see [docs/DESIGN.md](docs/DESIGN.md) before filing the issue.
+
+## The name
+
+*The Roman praetor held both imperium — the power to command the legions — and the judgment seat. So does this plugin: command the legion, judge the work.*
 
 ## Acknowledgements
 
