@@ -16,8 +16,8 @@
   <!-- row 1 boxes -->
   <g font-family="Helvetica,Arial,sans-serif" font-size="13.5" text-anchor="middle">
     <rect x="28"  y="52" width="150" height="52" rx="8" fill="#131b2e" stroke="#3a3f4f"/>
-    <text x="103" y="74" fill="#e2e8f0" font-weight="bold">you say the word</text>
-    <text x="103" y="92" fill="#94a3b8" font-size="11.5">never auto-dispatch</text>
+    <text x="103" y="74" fill="#e2e8f0" font-weight="bold">you summon it once</text>
+    <text x="103" y="92" fill="#94a3b8" font-size="11.5">dormant before · announced after</text>
 
     <rect x="216" y="52" width="150" height="52" rx="8" fill="#131b2e" stroke="#3a3f4f"/>
     <text x="291" y="74" fill="#e2e8f0" font-weight="bold">bar frozen in git</text>

@@ -1,0 +1,67 @@
+<svg viewBox="0 0 1000 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="praetor 派发生命周期">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#34d399"/>
+    </marker>
+    <marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#f77085"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="250" rx="12" fill="#0b1220"/>
+  <rect x="0" y="0" width="1000" height="3" fill="#7c6a46"/>
+
+  <!-- 第一行 -->
+  <g font-family="PingFang SC,Hiragino Sans GB,Microsoft YaHei,Helvetica,sans-serif" font-size="14" text-anchor="middle">
+    <rect x="28"  y="52" width="150" height="52" rx="8" fill="#131b2e" stroke="#3a3f4f"/>
+    <text x="103" y="74" fill="#e2e8f0" font-weight="bold">召唤一次</text>
+    <text x="103" y="92" fill="#94a3b8" font-size="11.5">之前蛰伏 · 之后先声明</text>
+
+    <rect x="216" y="52" width="150" height="52" rx="8" fill="#131b2e" stroke="#3a3f4f"/>
+    <text x="291" y="74" fill="#e2e8f0" font-weight="bold">标准冻结进 git</text>
+    <text x="291" y="92" fill="#94a3b8" font-size="11.5">在 Codex 出场之前</text>
+
+    <rect x="404" y="52" width="150" height="52" rx="8" fill="#131b2e" stroke="#3a3f4f"/>
+    <text x="479" y="74" fill="#e2e8f0" font-weight="bold">Codex 执行</text>
+    <text x="479" y="92" fill="#94a3b8" font-size="11.5">沙盒里跑 · 无提交权</text>
+
+    <rect x="592" y="52" width="150" height="52" rx="8" fill="#131b2e" stroke="#7c6a46" stroke-width="2"/>
+    <text x="667" y="74" fill="#f4f1e8" font-weight="bold">验收员判卷</text>
+    <text x="667" y="92" fill="#94a3b8" font-size="11.5">全新上下文 · 判了就是判了</text>
+
+    <rect x="812" y="52" width="160" height="52" rx="8" fill="#0f2419" stroke="#34d399"/>
+    <text x="892" y="74" fill="#34d399" font-weight="bold">Claude 提交</text>
+    <text x="892" y="92" fill="#94a3b8" font-size="11.5">带着凭据合并</text>
+
+    <!-- 第二行：失败路径 -->
+    <rect x="516" y="168" width="150" height="52" rx="8" fill="#2a1520" stroke="#f77085"/>
+    <text x="591" y="190" fill="#f77085" font-weight="bold">重试 ≤ 2 次</text>
+    <text x="591" y="208" fill="#94a3b8" font-size="11.5">重新交代 · 同一标准</text>
+
+    <rect x="726" y="168" width="190" height="52" rx="8" fill="#2a1520" stroke="#f77085" stroke-width="2"/>
+    <text x="821" y="190" fill="#f77085" font-weight="bold">大声接管</text>
+    <text x="821" y="208" fill="#94a3b8" font-size="11.5">Claude 自己干 · 明确告诉你</text>
+  </g>
+
+  <!-- 第一行箭头 -->
+  <g stroke="#64748b" stroke-width="1.6" fill="none">
+    <line x1="178" y1="78" x2="212" y2="78" marker-end="url(#a)"/>
+    <line x1="366" y1="78" x2="400" y2="78" marker-end="url(#a)"/>
+    <line x1="554" y1="78" x2="588" y2="78" marker-end="url(#a)"/>
+  </g>
+  <!-- PASS -->
+  <line x1="742" y1="78" x2="808" y2="78" stroke="#34d399" stroke-width="2" marker-end="url(#g)"/>
+  <text x="775" y="66" fill="#34d399" font-family="Helvetica,sans-serif" font-size="12" font-weight="bold" text-anchor="middle">PASS</text>
+  <!-- FAIL 向下 -->
+  <path d="M 667 104 L 667 140 L 591 140 L 591 164" stroke="#f77085" stroke-width="2" fill="none" marker-end="url(#r)"/>
+  <text x="700" y="132" fill="#f77085" font-family="Helvetica,sans-serif" font-size="12" font-weight="bold" text-anchor="middle">FAIL</text>
+  <!-- 重试回环 -->
+  <path d="M 591 168 L 591 146 L 479 146 L 479 108" stroke="#64748b" stroke-width="1.4" stroke-dasharray="4 3" fill="none" marker-end="url(#a)"/>
+  <!-- 重试耗尽 -->
+  <line x1="666" y1="194" x2="722" y2="194" stroke="#f77085" stroke-width="2" marker-end="url(#r)"/>
+  <text x="694" y="184" fill="#94a3b8" font-family="Helvetica,sans-serif" font-size="10.5" text-anchor="middle">×2</text>
+
+  <text x="500" y="26" fill="#7c6a46" font-family="PingFang SC,Hiragino Sans GB,Microsoft YaHei,Helvetica,sans-serif" font-size="13.5" font-weight="bold" text-anchor="middle" letter-spacing="6">派发生命周期 —— 不存在静默失败这条路</text>
+</svg>
