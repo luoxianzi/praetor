@@ -10,10 +10,9 @@ A Claude Code plugin that lets Claude hand grunt work to the [Codex CLI](https:/
 
 ---
 
-<!-- HERO-GIF slot (pre-launch asset): vhs terminal recording, ~30s, two acts —
-     Act 1 happy path: "send this to codex" → freeze → codex → JUDGE: PASS → merge.
-     Act 2 the differentiator: JUDGE: FAIL (red) → retry → FAIL → loud TAKEOVER.
-     A PASS-only demo looks like every other delegation plugin; the FAIL act is mandatory. -->
+![praetor in action — replay of real runs](docs/assets/demo.gif)
+
+*Replay of real runs — every number and verdict above comes from the benchmark table below, including the timeout kill. Reproduce it: `vhs docs/assets/demo.tape`.*
 
 ## Why
 

@@ -1,10 +1,15 @@
 {
   "name": "praetor",
-  "owner": { "name": "luoxianzi" },
+  "owner": {
+    "name": "luoxianzi"
+  },
   "plugins": [
     {
       "name": "praetor",
       "source": "./"
     }
-  ]
+  ],
+  "metadata": {
+    "description": "Claude plans, Codex executes, a binding fresh-context judge decides what merges. Zero config."
+  }
 }
