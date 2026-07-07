@@ -1,0 +1,5 @@
+# The product IS the markdown — skills, agents, docs. Count it.
+# (GitHub linguist treats .md as "documentation" and hides it from the
+# language bar by default, leaving only two tiny shell scripts visible.)
+*.md linguist-detectable=true
+docs/assets/* linguist-vendored=true
