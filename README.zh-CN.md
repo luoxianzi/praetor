@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/assets/banner.png" alt="praetor — 执兵权，掌裁判" width="100%"></p>
+
 # praetor
 
 **Claude 当大脑，Codex 当双手。合不合并，由一个不吃人情的验收员说了算。**
@@ -10,7 +12,7 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-blueviolet)](https://claude.com/claude-code) [![validate](https://github.com/luoxianzi/praetor/actions/workflows/validate.yml/badge.svg)](https://github.com/luoxianzi/praetor/actions/workflows/validate.yml) [![English](https://img.shields.io/badge/docs-English-blue)](README.md)
 
-[安装](#安装) · [怎么用](#怎么用) · [实测，不吹牛](#实测不吹牛) · [跟同类工具的区别](#跟同类工具的区别) · [常见问题](#常见问题)
+[新手教程](docs/TUTORIAL.zh-CN.md) · [安装](#安装) · [怎么用](#怎么用) · [实测，不吹牛](#实测不吹牛) · [跟同类工具的区别](#跟同类工具的区别) · [常见问题](#常见问题)
 
 ---
 
@@ -35,6 +37,8 @@
 
 前置：[Claude Code](https://claude.com/claude-code) + [Codex CLI](https://github.com/openai/codex)（`npm i -g @openai/codex` 然后 `codex login`）。国内网络装 npm 包建议配镜像（如 npmmirror）；`codex login` 需要能访问 OpenAI，或直接用你已配好的中转站 config.toml。
 
+第一次用？**[10 分钟新手教程](docs/TUTORIAL.zh-CN.md)** 带你完整走一遍真实派活——冻结的标准、判决书原文、还有一次真实失败。
+
 ## 中转站 / 自定义模型用户（先说你们最关心的）
 
 已经在 `~/.codex/config.toml` 里把 Codex 指到中转站或别的模型（DeepSeek/GLM/Qwen…）？**开箱即用**——探测到自定义 provider 就自动尊重你的配置，不会强塞官方模型旗子。而且验收闸门不挑模型：苦力越弱只会"接管次数变多"，**绝不会坏代码悄悄混进去**。
@@ -51,19 +55,11 @@
 /praetor:delegate 把 src/ 里所有 moment 日期格式化迁移到 dayjs
 ```
 
-之后发生的事（生命周期）：
+之后发生的事：
 
-```
-你开口
-   → 探测（codex 装没装？登没登录？有没有 STOP 急停文件？）
-   → 值不值得派——直接干更快的话 Claude 会先说
-   → 开一次性分支 codex/<task>（主干永不碰）
-   → 验收标准冻结提交进 git（在 Codex 动手之前）
-   → 自包含派工单 → codex exec（沙盒里跑）
-   → 全新验收员跑冻结检查 —— PASS / FAIL，判了就是判了
-   → PASS：Claude 提交并汇报 · FAIL：最多重派 2 次，然后大声接管
-   → 清理 + 记一行台账
-```
+<p align="center"><img src="docs/assets/lifecycle.svg" alt="派活生命周期——你开口、标准冻结进git、codex执行、验收员判卷，PASS则提交、FAIL则重试直至大声接管" width="100%"></p>
+
+*每一步的真实产物（冻结文件、判决书原文、一次真实失败）：见[新手教程](docs/TUTORIAL.zh-CN.md)。*
 
 **三条铁律，无例外：**
 

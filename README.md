@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/assets/banner.png" alt="praetor — command the legion, judge the work" width="100%"></p>
+
 # praetor
 
 **Claude plans. Codex executes. A judge you can't sweet-talk decides what merges.**
@@ -10,7 +12,7 @@ A Claude Code plugin that lets Claude hand grunt work to the [Codex CLI](https:/
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-blueviolet)](https://claude.com/claude-code) [![validate](https://github.com/luoxianzi/praetor/actions/workflows/validate.yml/badge.svg)](https://github.com/luoxianzi/praetor/actions/workflows/validate.yml) [![中文说明](https://img.shields.io/badge/文档-中文-red)](README.zh-CN.md)
 
-[Install](#install) · [Use](#use) · [Measured, not promised](#measured-not-promised) · [How praetor differs](#how-praetor-differs) · [FAQ](#faq)
+[Tutorial](docs/TUTORIAL.md) · [Install](#install) · [Use](#use) · [Measured, not promised](#measured-not-promised) · [How praetor differs](#how-praetor-differs) · [FAQ](#faq)
 
 ---
 
@@ -35,6 +37,8 @@ That's it. **Zero configuration.** Idle footprint: **~313 always-on tokens** —
 
 Requirements: [Claude Code](https://claude.com/claude-code) + [Codex CLI](https://github.com/openai/codex) (`npm i -g @openai/codex`, then `codex login`).
 
+New here? The **[10-minute tutorial](docs/TUTORIAL.md)** walks a real dispatch end to end — the frozen bar, the verdict, and one real failure.
+
 ## Use
 
 Say it in plain language, or use the command:
@@ -45,19 +49,11 @@ Say it in plain language, or use the command:
 /praetor:delegate migrate all date formatting in src/ from moment to dayjs
 ```
 
-What happens next (the lifecycle):
+What happens next:
 
-```
-you say the word
-   → preflight (codex installed? logged in? STOP file?)
-   → worth-it check — if doing it directly is faster, Claude says so first
-   → throwaway branch codex/<task>          (main is never touched)
-   → acceptance criteria frozen & committed  (before Codex exists)
-   → self-contained brief → codex exec       (gpt-5.5, xhigh effort, sandboxed)
-   → fresh-context judge runs the frozen checks — PASS or FAIL, binding
-   → PASS: Claude commits & reports  ·  FAIL: ≤2 retries, then loud takeover
-   → cleanup + one-line ledger entry
-```
+<p align="center"><img src="docs/assets/lifecycle.svg" alt="the dispatch lifecycle — you say the word, bar frozen in git, codex executes, binding judge, then PASS to commit or FAIL to retries and loud takeover" width="100%"></p>
+
+*Every state, with the real artifacts (frozen bar, verdict, one real failure): the [tutorial](docs/TUTORIAL.md).*
 
 **Three iron laws — no exceptions:**
 
