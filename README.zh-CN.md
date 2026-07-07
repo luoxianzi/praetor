@@ -35,7 +35,7 @@
 
 就这一步。**零配置。常驻仅 ~313 token**——在你真正派活之前，这就是它的全部开销。你机器上 `codex login` 能用，派活就能用。没有配置文件、没有向导、不需要把任何 API key 交给我们——插件只调用你本机已登录的 Codex CLI。
 
-前置：[Claude Code](https://claude.com/claude-code) + [Codex CLI](https://github.com/openai/codex)（`npm i -g @openai/codex` 然后 `codex login`）。国内网络装 npm 包建议配镜像（如 npmmirror）；`codex login` 需要能访问 OpenAI，或直接用你已配好的中转站 config.toml。
+前置：[Claude Code](https://claude.com/claude-code) + [Codex CLI](https://github.com/openai/codex)（`npm i -g @openai/codex` 然后 `codex login`）。国内网络装 npm 包建议配镜像（如 npmmirror）；`codex login` 需要能访问 OpenAI，或直接用你已配好的中转站 config.toml。Windows：在 Git Bash 或 WSL 下可用（Claude Code 本身也走它们）。
 
 第一次用？**[10 分钟新手教程](docs/TUTORIAL.zh-CN.md)** 带你完整走一遍真实派活——冻结的标准、判决书原文、还有一次真实失败。
 

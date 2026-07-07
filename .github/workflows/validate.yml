@@ -30,5 +30,6 @@ jobs:
       - name: Iron laws are intact (product law, see CLAUDE.md)
         run: |
           grep -q 'FAIL cannot be overridden' README.md
+          grep -q 'FAIL cannot be overridden' skills/dispatching-to-codex/SKILL.md
           grep -qi 'frozen' skills/dispatching-to-codex/SKILL.md
           grep -qiE 'max 2|2 retries|retries.*2' skills/dispatching-to-codex/SKILL.md

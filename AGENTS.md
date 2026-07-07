@@ -30,5 +30,5 @@ A Claude Code plugin. Claude plans; the Codex CLI (default `gpt-5.5`, `xhigh` ef
 - `skills/writing-codex-briefs/` — brief + acceptance-criteria craft
 - `agents/codex-judge.md` — the binding judge
 - `commands/delegate.md` — `/praetor:delegate`
-- `scripts/preflight.sh` — probe (PATH/auth/STOP/relay)
+- `skills/dispatching-to-codex/preflight.sh` — probe (PATH/auth/STOP/relay/git)
 - `docs/DESIGN.md` — every decision and every deliberate "no"

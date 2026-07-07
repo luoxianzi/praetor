@@ -8,7 +8,7 @@ Everything below uses real artifacts from praetor's own benchmark runs — the s
 - [Codex CLI](https://github.com/openai/codex): `npm i -g @openai/codex`, then `codex login`
 - Verify both: `claude --version` and `codex --version` print versions; `codex login status` says logged in
 
-That's the entire setup. praetor itself needs zero configuration.
+That's the entire setup. praetor itself needs zero configuration. (Windows: everything runs under Git Bash or WSL, same as Claude Code itself.)
 
 ## 1. Install
 

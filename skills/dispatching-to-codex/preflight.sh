@@ -26,12 +26,10 @@ if ! codex login status >/dev/null 2>&1; then
   fi
 fi
 
-# Dispatch needs git for branch isolation + the frozen acceptance commit.
-# (Analysis-only dispatches don't, but write dispatches are the risky path.)
-if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  echo "not-ready reason=not-a-git-repo (write dispatches need git; analysis-only is still fine)"
-  exit 4
-fi
+# Git probe (non-fatal): write dispatches need git for branch isolation +
+# the frozen acceptance commit; analysis-only dispatches work without it.
+GIT="yes"
+git rev-parse --is-inside-work-tree >/dev/null 2>&1 || GIT="no"
 
 # Relay / custom provider sniff (read-only): only an ACTIVE top-level
 # `model_provider = ...` counts — a defined-but-unactivated [model_providers.x]
@@ -42,5 +40,5 @@ if [ -f "${HOME}/.codex/config.toml" ] \
   CONFIG="custom"
 fi
 
-echo "ready version=${VERSION} config=${CONFIG}"
+echo "ready version=${VERSION} config=${CONFIG} git=${GIT}"
 exit 0

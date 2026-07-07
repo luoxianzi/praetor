@@ -35,7 +35,7 @@ A Claude Code plugin that lets Claude hand grunt work to the [Codex CLI](https:/
 
 That's it. **Zero configuration.** Idle footprint: **~313 always-on tokens** — that is the entire cost until the moment you dispatch. If `codex login` works on your machine, dispatch works. No config file, no wizard, no API keys handed to us — the plugin only shells out to your own authenticated Codex CLI.
 
-Requirements: [Claude Code](https://claude.com/claude-code) + [Codex CLI](https://github.com/openai/codex) (`npm i -g @openai/codex`, then `codex login`).
+Requirements: [Claude Code](https://claude.com/claude-code) + [Codex CLI](https://github.com/openai/codex) (`npm i -g @openai/codex`, then `codex login`). Windows: works under Git Bash or WSL (which Claude Code itself uses).
 
 New here? The **[10-minute tutorial](docs/TUTORIAL.md)** walks a real dispatch end to end — the frozen bar, the verdict, and one real failure.
 

@@ -8,7 +8,7 @@
 - 装好 [Codex CLI](https://github.com/openai/codex)：`npm i -g @openai/codex`，然后 `codex login`（国内网络装 npm 包建议配镜像，如 npmmirror；登录需能访问 OpenAI，或直接用你配好的中转站）
 - 验证：`claude --version` 和 `codex --version` 能出版本号
 
-就这些。praetor 本身零配置。
+就这些。praetor 本身零配置。（Windows：一切走 Git Bash 或 WSL，和 Claude Code 本身一样。）
 
 ## 1. 安装
 
