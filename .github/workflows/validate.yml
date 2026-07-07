@@ -27,6 +27,15 @@ jobs:
             head -1 "$f" | grep -q '^---$' || { echo "missing frontmatter: $f"; exit 1; }
           done
 
+      - name: Legion mode invariants (v0.2)
+        run: |
+          test -f skills/dispatching-legion/SKILL.md
+          grep -q 'MANIFEST' skills/dispatching-legion/SKILL.md
+          grep -q 'integration judge' skills/dispatching-legion/SKILL.md
+          grep -qiE 'cap.*5|5 lanes' skills/dispatching-legion/SKILL.md
+          grep -q 'MANIFEST' agents/codex-judge.md
+          grep -q 'MANIFEST' skills/writing-codex-briefs/SKILL.md
+
       - name: Iron laws are intact (product law, see CLAUDE.md)
         run: |
           grep -q 'FAIL cannot be overridden' README.md

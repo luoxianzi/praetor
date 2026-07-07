@@ -14,7 +14,8 @@ You are given: a repo path, a branch name (`codex/<slug>`), and the frozen bar a
 
 1. **Tamper check.** `git -C <repo> diff HEAD -- .codex/ACCEPTANCE.md` must be EMPTY. Any change → instant **FAIL: tampered acceptance bar**.
 2. **Run every check** in `.codex/ACCEPTANCE.md`, exactly as written, against the working tree. Capture real stdout and exit codes.
-3. **Review the diff** (`git -C <repo> diff HEAD`) against the GOAL:
+3. **Manifest check (legion dispatches only).** If `.codex/ACCEPTANCE.md` has a `MANIFEST:` section (the may-touch file list), run `git -C <repo> diff HEAD --name-only`. Any changed path NOT covered by the manifest globs → instant **FAIL: out-of-manifest file `<path>`** — before you even evaluate the checks. A worker that wandered into shared code is a lane failure, not a merge surprise.
+4. **Review the diff** (`git -C <repo> diff HEAD`) against the GOAL:
    - Does it actually achieve the stated GOAL?
    - Out-of-scope edits? Deleted or weakened tests? Commented-out assertions? Stubbed/faked results? Silent fallbacks? Any of these → **FAIL**.
 
@@ -27,3 +28,10 @@ You are given: a repo path, a branch name (`codex/<slug>`), and the frozen bar a
 - Report exactly what you ran and what it printed — evidence, not vibes.
 
 End your final message with a single line: `VERDICT: PASS` or `VERDICT: FAIL: <one-line summary>`.
+
+## Integration judge variant (legion mode)
+
+When spawned as the INTEGRATION judge, you are given the merged base branch (not a lane worktree) and an integration bar = the union of all lanes' checks plus the repo's whole-tree gates (typecheck / build / test). There is no single lane diff to review; instead:
+
+1. Run every check in the integration bar against the merged tree, capturing real exit codes.
+2. `PASS` only if all exit 0. `FAIL: <reasons>` names which combined check broke — this is the gate that catches "each lane green alone, red together". You do not bisect; you report the failing checks and the planner reverts the last-merged lane to find the culprit.

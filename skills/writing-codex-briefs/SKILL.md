@@ -21,7 +21,12 @@ CHECKS (all must pass, exact commands):
 
 CONSTRAINTS:
 - Only edit <files/dirs>. Do not modify <test files / this file / unrelated code>.
+
+MANIFEST: (legion dispatches only — the may-touch list)
+- <explicit paths/globs this lane may create or modify>
 ```
+
+**MANIFEST (legion mode).** When a task is one lane of a parallel legion, the acceptance file MUST list every path/glob the lane may touch. The judge FAILs any changed file outside it. Rules: list real paths, not "src/" if only two files change; a footprint you can't state precisely means the task is **not legion-eligible** — serialize it. Manifests across sibling lanes must be pairwise disjoint, or there is no legion.
 
 **Writing checks that protect you** (the judge is only as strong as these):
 - Prefer commands with **exit codes** over "the code should look right".

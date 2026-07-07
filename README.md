@@ -65,6 +65,14 @@ What happens next:
 
 Silent failure is treated as the #1 killer of tools like this. It has no path here.
 
+## Legion Mode — many workers, in parallel
+
+The praetor commanded legions, plural. When a job splits into **2–5 genuinely independent, mechanical pieces**, say so — *"dispatch these in parallel"* / *"派几路 codex 一起干"* — and praetor runs each in its own git worktree with its own frozen bar and its own judge, then merges them in order behind a **mandatory integration judge** that catches "each piece passed alone, broke together."
+
+Same laws, per lane. Zero new config: praetor sets the worker count from the task split (hard cap 5, more → waves), never a knob. Strictly disjoint file footprints or it refuses and serializes — *when in doubt, one at a time*. Best paired with [superpowers](https://github.com/obra/superpowers): its `writing-plans` cuts the work into independent lanes; praetor executes and judges them.
+
+Real speedup exists only when the split is real. If it isn't, that's not a legion — it's one dispatch, and praetor says so.
+
 ## Measured, not promised
 
 Real numbers from repeated local runs are published here before anything else is claimed. Each row: one task class, wall-clock and token cost of *dispatch vs. Claude doing it directly*, and the judge's first-pass verdict rate:

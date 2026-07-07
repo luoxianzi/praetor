@@ -40,5 +40,14 @@ if [ -f "${HOME}/.codex/config.toml" ] \
   CONFIG="custom"
 fi
 
-echo "ready version=${VERSION} config=${CONFIG} git=${GIT}"
+# Legion support (worktrees) + stale-legion sweep hint (read-only; no cleanup here).
+WORKTREE="no"; git worktree list >/dev/null 2>&1 && WORKTREE="yes"
+STALE=""
+if [ "${GIT}" = "yes" ]; then
+  ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
+  LEG="$(dirname "${ROOT}")/$(basename "${ROOT}")-legion"
+  [ -d "${LEG}" ] && STALE=" stale-legion=${LEG}"
+fi
+
+echo "ready version=${VERSION} config=${CONFIG} git=${GIT} worktree=${WORKTREE}${STALE}"
 exit 0
