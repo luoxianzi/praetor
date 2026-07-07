@@ -13,7 +13,7 @@ Thanks for stopping by. This project has an unusual contribution policy, stated 
 
 ## What does not land here (policy, not oversight)
 
-No config file. No model picker UI. No concurrency knobs. No configurable retry count. No background daemon. No dashboards. No auto-dispatch mode.
+No config file. No model picker UI. No concurrency knobs. No configurable retry count. No background daemon. No dashboards. No **silent** dispatch — auto-triage is the model since v0.3, but the one-line announcement and the standing brakes (plain-language veto, STOP file) are law and may not be weakened.
 
 Every one of these was cut deliberately — the reasoning is in [docs/DESIGN.md](docs/DESIGN.md). PRs adding them will be closed with a link to this paragraph, with gratitude and without exception. (If real-world usage proves one of these wrong, open a Discussion with your ledger data — evidence moves us, votes don't.)
 

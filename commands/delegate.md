@@ -3,7 +3,7 @@ description: Delegate a task to Codex with frozen acceptance criteria and a bind
 argument-hint: <task description>
 ---
 
-The user explicitly requests delegation of the following task to Codex:
+The user requests delegation of the following task to Codex (the explicit path — praetor also auto-triages delegate-shaped work on its own, announcing first):
 
 $ARGUMENTS
 

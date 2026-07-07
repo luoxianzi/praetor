@@ -40,7 +40,8 @@ MANIFEST: (legion dispatches only — the may-touch list)
 GOAL: <same one sentence — must match ACCEPTANCE.md>
 CONTEXT: <repo path, key files, constraints — everything Codex needs, it cannot ask you>
 DO: <numbered, concrete steps>
-VERIFY: <run the exact CHECKS above and show their real output>
+VERIFY: <run the exact CHECKS above and show their real output — red→green: state that
+        the named check failed before your change and passes after>
 REPORT: <what to return: diff summary + which checks passed>
 DO NOT: run ANY git command (git state is the planner's job); commit anything;
         touch .codex/ACCEPTANCE.md; edit unrelated files;

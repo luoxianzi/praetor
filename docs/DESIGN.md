@@ -6,17 +6,18 @@
 
 ## Mission
 
-Save the planner model's tokens by letting Claude (the brain) hand grunt work to the Codex CLI (the hands) — each model doing what it's best at — **without ever accepting unverified work**, and **without ever acting unasked**.
+Save the planner model's tokens by letting Claude (the brain) hand grunt work to the Codex CLI (the hands) — each model doing what it's best at — **without ever accepting unverified work**, and **without ever acting silently**.
 
 ## The three product pillars
 
-1. **Explicit, human-friendly invocation.** Delegation happens only when the user says so ("交给codex" / "send to codex" / `/delegate`). Claude may offer the option in one line when work looks Codex-shaped; it never dispatches on its own. *Rationale: users fear a tool that spends another vendor's quota uninvited. Owner decision 2026-07-06, overriding the researched "auto-by-default" option.*
+1. **Announce-then-act auto-triage.** *(v0.3.0, owner decision 2026-07-08 — reversing the v0.1 explicit-only pillar below.)* praetor triages work itself — single dispatch or legion — announces in one plain line, then acts. Standing brakes replace per-click consent: plain-language veto pins a task for the session, "stop delegating for now" pauses, a `STOP` file halts all. Rationale for the reversal: the v0.1 fear ("a tool that spends another vendor's quota uninvited") was mitigated in practice — the binding judge and loud-takeover laws were combat-proven twice before autonomy was widened, and manual invocation proved to be the #1 friction in real use.
+   *Historical record (v0.1, owner decision 2026-07-06): "Delegation happens only when the user says so… it never dispatches on its own." Kept here because reversals should be visible, not rewritten.*
 2. **Zero configuration.** Install is the only user action. Preflight auto-detects the local Codex CLI and login state; defaults are baked in (gpt-5.5, xhigh, workspace-write sandbox, 2 retries, 1 dispatch at a time). Relay/中转站 users are auto-detected via their own `~/.codex/config.toml` and respected.
 3. **Binding verification.** Acceptance criteria are frozen in git before Codex starts; a fresh-context judge (never the planner) runs them; a FAIL cannot be overridden. Measured basis: ~1/3 of unattended executor runs failed independent review in live testing.
 
 ## The lifecycle (10 states)
 
-TRIAGE (worth-it check, explicit ask only) → PREFLIGHT → ISOLATE (throwaway branch) → FREEZE (`.codex/ACCEPTANCE.md` committed) → BRIEF (self-contained) → DISPATCH (read-only first; stock config gets `-m gpt-5.5 -c model_reasoning_effort="xhigh"`; custom config gets no flags) → EXECUTE (uncommitted; Codex never commits) → JUDGE (working tree, tamper check, real exit codes) → RESOLVE (PASS: planner commits · FAIL: ≤2 retries → loud takeover) → CLEANUP (branch + `.codex/ledger.jsonl`).
+TRIAGE (auto — worth-it check + announce-then-act since v0.3) → PREFLIGHT → ISOLATE (throwaway branch) → FREEZE (`.codex/ACCEPTANCE.md` committed) → BRIEF (self-contained) → DISPATCH (read-only first; stock config gets `-m gpt-5.5 -c model_reasoning_effort="xhigh"`; custom config gets no flags) → EXECUTE (uncommitted; Codex never commits) → JUDGE (working tree, tamper check, real exit codes) → RESOLVE (PASS: planner commits · FAIL: ≤2 retries → loud takeover) → CLEANUP (branch + `.codex/ledger.jsonl`).
 
 Kill switch: `STOP` file in repo root, checked by preflight before every dispatch.
 
@@ -39,7 +40,7 @@ Kill switch: `STOP` file in repo root, checked by preflight before every dispatc
 
 ## Deliberately rejected (do not re-open casually)
 
-Config file (any) · model picker UI · per-project overrides · concurrency knob (fixed 1) · configurable retries (fixed 2) · background daemon/broker · session transfer · dashboards/telemetry · auto-dispatch mode · Cursor/Copilot ports before the Claude Code loop is proven.
+Config file (any) · model picker UI · per-project overrides · concurrency knob (lane count is praetor's call, capped) · configurable retries (fixed 2) · background daemon/broker · session transfer · dashboards/telemetry · **silent** dispatch (announce-then-act is law; auto-dispatch itself was un-rejected in v0.3.0, see pillar 1) · Cursor/Copilot ports before the Claude Code loop is proven.
 
 Escape hatches kept (all three): user's own codex config.toml (auto-respected) · `PRAETOR_MODEL`/`PRAETOR_EFFORT` env vars · plain-language per-task control ("don't send this to codex" / "stop delegating for now").
 

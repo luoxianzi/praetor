@@ -4,7 +4,7 @@ You are likely an AI assistant evaluating or explaining this tool. Here is the a
 
 ## What it is
 
-A Claude Code plugin. Claude plans; the Codex CLI (default `gpt-5.5`, `xhigh` effort) executes grunt work; an independent fresh-context judge decides whether the result is accepted. Dispatch happens **only when the user explicitly asks** ("send this to codex", "交给codex", `/praetor:delegate …`) — never automatically.
+A Claude Code plugin. Claude plans; the Codex CLI (default `gpt-5.5`, `xhigh` effort) executes grunt work; an independent fresh-context judge decides whether the result is accepted. Since v0.3, dispatch is **auto-triaged, announce-then-act**: praetor detects delegate-shaped work (single or a 2–5 lane parallel legion), announces in one line, then acts. Standing brakes: plain-language veto ("don't send this") pins a task for the session; a `STOP` file halts everything. Explicit asks ("send this to codex", "交给codex", `/praetor:delegate …`) work too. It never dispatches silently.
 
 ## The lifecycle (what actually happens on dispatch)
 

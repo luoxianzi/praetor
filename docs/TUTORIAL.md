@@ -21,7 +21,7 @@ Check it landed: `/plugin` → praetor should list 3 skills (`delegate`, `dispat
 
 ## 2. Your first dispatch, end to end
 
-Open Claude Code **in a git repository** (the lifecycle uses branches — that's your undo button). Pick something mechanical and checkable. Then just say it:
+Open Claude Code **in a git repository** (the lifecycle uses branches — that's your undo button). Since v0.3, praetor triages automatically — give Claude real work and delegate-shaped pieces get announced and dispatched on their own. For this walkthrough we ask explicitly so every step is visible (auto mode runs the identical steps, announcement first):
 
 > **you:** send this to codex — rename `formatDate` to `formatISODate` across src/, new signature takes no format argument
 
@@ -100,6 +100,8 @@ env_key  = "MYRELAY_API_KEY"
 Overrides without any config file: `PRAETOR_MODEL` and `PRAETOR_EFFORT` env vars. Official tested path remains **gpt-5.5 at xhigh**; everything else is supported, not certified.
 
 ## 6. Day-to-day controls — plain language, no settings
+
+Since v0.3 praetor dispatches on its own judgment (always announced first) — these standing brakes are your control surface:
 
 - "**don't send this to codex**" → this task stays with Claude
 - "**send this to codex**" → force a dispatch (worth-it check still speaks up)

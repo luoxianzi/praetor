@@ -6,13 +6,13 @@
 
 *罗马执政官 praetor：兵权与裁判权集于一身——正如本插件：指挥军团出征，判决即是法律。*
 
-一个 Claude Code 插件：让 Claude 把机械累活派给 [Codex CLI](https://github.com/openai/codex) 干——**只在你开口时才派**——派活前验收标准先冻结进 git，干完由一个独立的、没参与过的验收员判卷，FAIL 谁也推翻不了。
+一个 Claude Code 插件：让 Claude 把机械累活派给 [Codex CLI](https://github.com/openai/codex) 干——**自动分诊、动手前先声明一句**——派活前验收标准先冻结进 git，干完由一个独立的、没参与过的验收员判卷，FAIL 谁也推翻不了。
 
 **为什么非要验收员？** 实测约 **1/3** 的无人值守执行结果过不了独立审查——每一份，都是你本来会直接合进去的代码。
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-blueviolet)](https://claude.com/claude-code) [![validate](https://github.com/luoxianzi/praetor/actions/workflows/validate.yml/badge.svg)](https://github.com/luoxianzi/praetor/actions/workflows/validate.yml) [![English](https://img.shields.io/badge/docs-English-blue)](README.md)
 
-[新手教程](docs/TUTORIAL.zh-CN.md) · [安装](#安装) · [怎么用](#怎么用) · [实测，不吹牛](#实测不吹牛) · [跟同类工具的区别](#跟同类工具的区别) · [常见问题](#常见问题)
+[新手教程](docs/TUTORIAL.zh-CN.md) · [安装](#安装) · [快速上手](#快速上手) · [里面有什么](#里面有什么) · [实测，不吹牛](#实测不吹牛) · [跟同类工具的区别](#跟同类工具的区别) · [常见问题](#常见问题)
 
 ---
 
@@ -24,7 +24,7 @@
 
 - **Claude 的额度应该花在判断上，不是搬砖上。** 批量改代码、机械写测试、大面积读代码出报告——这些活烧上下文、烧额度。派给 Codex，用它自己的进程、它自己的额度跑。
 - **没有验收的委派只是许愿。** 上面那个 1/3，就是你本来会直接合进主干的代码——所以这里没有验收员点头，什么都合不进去。
-- **你说了算。** 本插件**绝不自动派活**。Claude 最多提一句"这活挺适合 Codex，要派吗？"——你不点头，活不动。
+- **你说了算——但不用你当扳机。** praetor 每次派活前都会先声明一句才动手；一句"这个别派"就把活钉死给 Claude，一个 `STOP` 文件全线停火。授权是常驻的，不是每次点头。
 
 ## 安装
 
@@ -47,14 +47,16 @@
 
 官方推荐并实测认证的路线：**Codex `gpt-5.5` + `xhigh` 推理强度**。其他路线：支持，但不背书。
 
-## 怎么用
+## 快速上手
 
-说人话就行，或者用命令：
+在任何 git 仓库里打开 Claude Code，正常干活就行。一旦任务里出现真正的机械累活——16 个文件的批量改名、机械写测试、大面积读代码出报告——praetor 自己判断、自己声明一句：
+
+> *这活我派给 Codex：迁移 src/ 的日期格式化——标准已冻结进 git，约 4 分钟。想拦就说一声。*
+
+Codex 在沙盒里用它自己的额度苦干。一个全新上下文的验收员亲自重跑冻结检查、审查 diff。PASS 则 Claude 提交并附上凭据；FAIL 最多重试 2 次，然后 Claude 自己干并明说。**你什么都不用特意做——这就是重点。** 明说当然也管用：
 
 ```
-"这个交给codex"  ·  "派给codex干"  ·  "send this to codex"
-
-/praetor:delegate 把 src/ 里所有 moment 日期格式化迁移到 dayjs
+"这个交给codex"  ·  "send this to codex"  ·  /praetor:delegate 把 src/ 迁移到 dayjs
 ```
 
 之后发生的事：
@@ -71,9 +73,24 @@
 
 静默失败是这类工具的头号死因——在这里它无路可走。
 
+## 里面有什么
+
+**流水线**
+- **dispatching-to-codex** —— 完整闭环：自动分诊 → 冻结标准 → 沙盒执行 → 判卷定案 → 提交或大声接管
+- **dispatching-legion** —— 2–5 路工人并行（git 工作树隔离、可碰清单、按序合并、强制集成验收，**实测 2.84×**）
+- **writing-codex-briefs** —— 自包含派工单 + 真能保护你的验收标准（红→绿检查、退出码、清单）
+- **codex-judge** —— 全新上下文验收员：没看过计划、亲自跑命令、判决不可推翻
+
+**硬保证**
+- **先声明后动手** —— 每次派活先说一句才动；"这个别派"随时钉死，`STOP` 文件全线停火
+- **标准冻结进 git** —— "怎么算干完"在 Codex 出场前就写死，且防篡改
+- **大声接管** —— 不存在静默失败这条路
+- **git 状态边界** —— Codex 只改文件、永不碰 git；`.git` 只读是设计
+- **零配置** —— 常驻 ~313 token；中转站自动尊重；实在要调只有两个环境变量
+
 ## 军团模式（Legion Mode）—— 多路并行
 
-执政官指挥的本就是"军团"，复数。当一个活能拆成 **2–5 个真正互不干扰、机械的块**时，你说一句——*"派几路 codex 一起干"* / *"dispatch these in parallel"*——praetor 就给每一路配一个独立 git 工作树、独立冻结标准、独立验收员，跑完按顺序合并，最后再过一道**强制集成验收**（专抓"各自都过、合起来坏"的语义冲突）。
+执政官指挥的本就是"军团"，复数。当一个活能拆成 **2–5 个真正互不干扰、机械的块**时，praetor **自己看出拆分**、先亮出花名册（几路、各碰哪些文件、各自验收、预计提速多少），然后给每一路配一个独立 git 工作树、独立冻结标准、独立验收员，跑完按顺序合并，最后再过一道**强制集成验收**（专抓"各自都过、合起来坏"的语义冲突）。（明说 *"派几路 codex 一起干"* 当然也行。）
 
 法条逐路照旧。零新配置：并行几路由任务拆分决定（硬上限 5，更多就分波），没有旋钮。文件范围必须严格互不相交，否则直接拒绝、改串行——**拿不准就一个一个来**。跟 [superpowers](https://github.com/obra/superpowers) 是绝配：它的 `writing-plans` 把活切成互不冲突的块，praetor 负责执行和判卷。
 
@@ -103,7 +120,7 @@ Claude↔Codex 桥不止我们一家，各有所长。摆事实：
 
 | | 谁决定派活 | 谁验收结果 | 要配什么 |
 |---|---|---|---|
-| **praetor** | 你，明说才派——绝不自动 | 独立验收员，FAIL 不可推翻 | 零配置（常驻 ~313 token） |
+| **praetor** | 自动分诊——动手前先声明；常驻刹车随时拦 | 独立验收员，FAIL 不可推翻 | 零配置（常驻 ~313 token） |
 | [codex-plugin-cc](https://github.com/openai/codex-plugin-cc) | 你，敲 /codex 命令 | 你自己读结果 | Codex CLI 登录 |
 | [skill-codex](https://github.com/skills-directory/skill-codex) | Claude，skill 触发就派 | 你自己读结果 | Codex CLI + 模型参数 |
 | [architect-loop](https://github.com/DanMcInerney/architect-loop) | 流水线内自动 | 流水线内置闸门 | 安装器 + 编排配置 |
@@ -116,7 +133,7 @@ Claude↔Codex 桥不止我们一家，各有所长。摆事实：
 
 **我（或 Claude）能推翻 FAIL 吗？** 不能。这就是本产品。想要"可以商量的验收员"，请看 [docs/DESIGN.md](docs/DESIGN.md) 里我们为什么不做。
 
-**它会不会没经我允许就派活？** 绝不会。Claude 最多提一句建议，你点头活才动。
+**它会不会没经我允许就派活？** 会——这是 v0.3 起的设计：praetor 自动分诊，**动手前必先声明一句**。你的刹车是常驻的，不用每次点头："这个别派"钉死本任务、"先别派活了"暂停本会话、`STOP` 文件全线停火。它永远不会做的是：不吭声偷偷派、跳过验收员合并、碰 git 状态。
 
 **中转站接的模型比较弱会怎么样？** 苦力越弱只会"接管次数变多"，**绝不会坏代码悄悄混进去**——验收闸门不挑模型。
 

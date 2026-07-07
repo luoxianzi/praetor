@@ -6,13 +6,13 @@
 
 *The Roman praetor held both imperium — the power to command the legions — and the judgment seat. So does this plugin: command the legion, judge the work.*
 
-A Claude Code plugin that lets Claude hand grunt work to the [Codex CLI](https://github.com/openai/codex) — **only when you say so** — with acceptance criteria frozen in git before Codex starts, and an independent fresh-context judge whose FAIL cannot be overridden.
+A Claude Code plugin that lets Claude hand grunt work to the [Codex CLI](https://github.com/openai/codex) — **triaged automatically, announced before it moves** — with acceptance criteria frozen in git before Codex starts, and an independent fresh-context judge whose FAIL cannot be overridden.
 
 **Why a judge?** In our live testing, roughly **1 in 3 unattended executor runs failed independent review** — every one of them work you'd otherwise have merged.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-blueviolet)](https://claude.com/claude-code) [![validate](https://github.com/luoxianzi/praetor/actions/workflows/validate.yml/badge.svg)](https://github.com/luoxianzi/praetor/actions/workflows/validate.yml) [![中文说明](https://img.shields.io/badge/文档-中文-red)](README.zh-CN.md)
 
-[Tutorial](docs/TUTORIAL.md) · [Install](#install) · [Use](#use) · [Measured, not promised](#measured-not-promised) · [How praetor differs](#how-praetor-differs) · [FAQ](#faq)
+[Tutorial](docs/TUTORIAL.md) · [Install](#install) · [Quick start](#quick-start) · [What's inside](#whats-inside) · [Measured, not promised](#measured-not-promised) · [How praetor differs](#how-praetor-differs) · [FAQ](#faq)
 
 ---
 
@@ -24,7 +24,7 @@ A Claude Code plugin that lets Claude hand grunt work to the [Codex CLI](https:/
 
 - **Your Claude tokens should buy judgment, not grunt work.** Bulk edits, mechanical test-writing, wide read-and-report analysis — these burn context and quota that Claude should spend on design and review. Codex runs them in its own process, on its own quota.
 - **Delegation without verification is just hope.** That 1-in-3 failure rate above is exactly the work you'd otherwise have merged — so nothing merges here without a verdict.
-- **You stay in charge.** This plugin never auto-dispatches. Claude may *offer* ("this looks Codex-shaped — want me to dispatch it?") — the work only moves when you say yes.
+- **You stay in charge — without being the trigger.** praetor announces every dispatch in one line before it moves; "don't send this" pins a task to Claude for the session, and a `STOP` file halts everything. Consent is standing, not per-click.
 
 ## Install
 
@@ -41,14 +41,16 @@ New here? The **[10-minute tutorial](docs/TUTORIAL.md)** walks a real dispatch e
 
 Updating later: `claude plugin update praetor@praetor` — installed plugins stay on their installed version until you update (by design), so grab fixes explicitly.
 
-## Use
+## Quick start
 
-Say it in plain language, or use the command:
+Open Claude Code in any git repo and just work. The moment a task contains real grunt work — a 16-file rename, mechanical test-writing, a wide read-and-report — praetor triages it itself and announces in one line:
+
+> *Dispatching to Codex: migrate date formatting across src/ — bar frozen in git, ~4 min. Say the word to stop.*
+
+Codex grinds in a sandbox, on its own quota. A fresh-context judge re-runs the frozen checks and inspects the diff. On PASS, Claude commits and hands you the receipts; on FAIL, ≤2 retries, then Claude does the work itself and says so. **You don't do anything special — that's the point.** Explicit asks work too:
 
 ```
-"send this to codex"  ·  "delegate the refactor to codex"  ·  "交给codex"
-
-/praetor:delegate migrate all date formatting in src/ from moment to dayjs
+"send this to codex"  ·  "交给codex"  ·  /praetor:delegate migrate src/ from moment to dayjs
 ```
 
 What happens next:
@@ -65,9 +67,24 @@ What happens next:
 
 Silent failure is treated as the #1 killer of tools like this. It has no path here.
 
+## What's inside
+
+**The lifecycle**
+- **dispatching-to-codex** — the full loop: auto-triage → frozen bar → sandboxed exec → binding judge → commit or loud takeover
+- **dispatching-legion** — 2–5 parallel workers in git worktrees, may-touch manifests, ordered merge, mandatory integration judge (**2.84× measured**)
+- **writing-codex-briefs** — self-contained briefs + acceptance bars that actually protect you (red→green checks, exit codes, manifests)
+- **codex-judge** — the fresh-context judge: never saw the plan, runs the real commands, cannot be overridden
+
+**The guarantees**
+- **Announce-then-act** — every dispatch declared in one line before it moves; "don't send this" pins it to Claude, `STOP` halts all
+- **Frozen bar in git** — the definition of done is committed before Codex exists, and tamper-checked
+- **Loud takeover** — there is no silent-failure path
+- **Git-state boundary** — Codex edits files, never git; `.git` stays read-only by design
+- **Zero config** — ~313 idle tokens; relay configs auto-respected; two env vars if you must
+
 ## Legion Mode — many workers, in parallel
 
-The praetor commanded legions, plural. When a job splits into **2–5 genuinely independent, mechanical pieces**, say so — *"dispatch these in parallel"* / *"派几路 codex 一起干"* — and praetor runs each in its own git worktree with its own frozen bar and its own judge, then merges them in order behind a **mandatory integration judge** that catches "each piece passed alone, broke together."
+The praetor commanded legions, plural. When a job splits into **2–5 genuinely independent, mechanical pieces**, praetor spots the split itself, announces the muster table (lanes, files, checks, the expected speedup), and runs each piece in its own git worktree with its own frozen bar and its own judge — then merges them in order behind a **mandatory integration judge** that catches "each piece passed alone, broke together." (Asking explicitly — *"dispatch these in parallel"* / *"派几路 codex 一起干"* — works too.)
 
 Same laws, per lane. Zero new config: praetor sets the worker count from the task split (hard cap 5, more → waves), never a knob. Strictly disjoint file footprints or it refuses and serializes — *when in doubt, one at a time*. Best paired with [superpowers](https://github.com/obra/superpowers): its `writing-plans` cuts the work into independent lanes; praetor executes and judges them.
 
@@ -97,7 +114,7 @@ Other Claude↔Codex bridges exist and are good at what they do. The factual dif
 
 | | Who decides to dispatch | What verifies the output | Config required |
 |---|---|---|---|
-| **praetor** | You, explicitly — never auto | Fresh-context judge; FAIL is binding | None (~313 tokens idle) |
+| **praetor** | Auto-triage — announced before it moves; standing opt-outs | Fresh-context judge; FAIL is binding | None (~313 tokens idle) |
 | [codex-plugin-cc](https://github.com/openai/codex-plugin-cc) | You, via /codex commands | You read the result | Codex CLI auth |
 | [skill-codex](https://github.com/skills-directory/skill-codex) | Claude, when the skill triggers | You read the result | Codex CLI + model prompts |
 | [architect-loop](https://github.com/DanMcInerney/architect-loop) | Automatic within the loop | Gates + review inside the loop | Installer + orchestration setup |
@@ -118,7 +135,7 @@ Escape hatches (that's all of them): `PRAETOR_MODEL` / `PRAETOR_EFFORT` env vars
 
 **Can I (or Claude) override a FAIL?** No. That is the product. If you want an overridable judge, [docs/DESIGN.md](docs/DESIGN.md) explains why we won't build one.
 
-**Will it ever dispatch without me asking?** Never. Claude may offer; the work moves only when you say yes.
+**Will it dispatch without me asking?** Yes — by design (since v0.3): praetor triages automatically and **announces before it moves**. Your brakes are standing, not per-click: "don't send this" pins a task to Claude for the session; "stop delegating for now" pauses; a `STOP` file halts everything. What it will never do: dispatch silently, merge without the judge, or touch git state.
 
 ## What's deliberately NOT here
 

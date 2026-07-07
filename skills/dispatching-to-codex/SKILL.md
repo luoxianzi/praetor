@@ -1,11 +1,15 @@
 ---
 name: dispatching-to-codex
-description: Use when the user explicitly asks to hand a task to Codex — "use codex", "delegate this", "send it to codex", "交给codex", "派给codex", or the /delegate command. Runs the full dispatch lifecycle with frozen acceptance criteria and a binding independent judge. NEVER auto-dispatch — delegation happens only on the user's word. If a task looks Codex-shaped (bulk mechanical edits, wide read-and-report analysis, test scaffolding), you may offer the option in ONE line; if the user doesn't take it, drop it.
+description: Use when a coding task contains mechanical, well-specified, checkable grunt work — bulk/repetitive edits, migrations, mechanical test-writing against a clear spec, wide read-and-report analysis — or when the user explicitly asks ("use codex", "交给codex", the /delegate command). Auto-triage is the default — announce the dispatch in ONE line, then act; do not wait for permission. The user's standing brakes always win — "don't send this", "stop delegating for now", or a STOP file halt everything. Never dispatch design work, subtle debugging, tiny tasks, or git-state operations.
 ---
 
 # Dispatching to Codex
 
 Claude is the brain; Codex is the hands. You plan, freeze the bar, and judge. Codex executes on its own quota, in its own process, so your context stays small and your tokens go to judgment — not grunt work.
+
+## Consent model: announce, then act
+
+When work is delegate-shaped, **you decide and you dispatch** — after announcing it in one plain line ("Dispatching to Codex: <task> — bar frozen, ~N min; say the word to stop"). Do not ask permission for routine grunt work; the announcement IS the consent surface. The brakes are standing and absolute: a plain-language veto ("don't send this", "别派给codex") pins the task to you for the session; "stop delegating for now" pauses everything; a `STOP` file in the repo root halts all dispatching. A veto is never re-litigated. If **superpowers** is installed, default to its workflows upstream — `brainstorming` for design-level asks, `writing-plans` before multi-step work — and let delegate-shaped plan tasks flow into dispatch.
 
 ## Iron Laws (no exceptions)
 
@@ -64,6 +68,8 @@ Bad dispatches: design work, subtle debugging, anything ambiguous, tiny tasks, a
 | "One more retry will fix it" | Retry 3+ burns both quotas for a coin flip. Law 3. |
 | "Codex said tests pass" | Codex reporting ≠ judge verifying. Only exit codes count. |
 | "It's just a small task, skip the branch" | Small tasks on main are how main breaks. Isolate or don't dispatch. |
+| "Better ask permission first, to be safe" | For routine grunt work, asking is friction — announce and act. The brakes protect the user, not the asking. |
+| "The user vetoed this earlier, but it'd really be faster…" | A veto stands for the session. Pinned means pinned. |
 | "The tree is only a little dirty, skip the stash" | The judge would grade the user's WIP and a PASS-commit would swallow it. Stash or stop. |
 | "Codex's sandbox blocked `.git` writes — add `.git` to writable roots" | **Never.** `.git` read-only is the sandbox enforcing our own law (Codex never touches git state — writable `.git` = rewritable history and executable hooks). If the task needs git commands, it was never a valid dispatch: do the git work yourself. |
 | "This edit task is basically analysis" | If it changes any file, it's a write dispatch. The shortcut is for reading only. |

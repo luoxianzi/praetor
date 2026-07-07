@@ -53,3 +53,11 @@ jobs:
         run: |
           test "$(grep -c 'PRAETOR_BRIEF' skills/dispatching-to-codex/SKILL.md)" -ge 4
           ! grep -qE 'resume <session-id> "' skills/dispatching-to-codex/SKILL.md
+
+      - name: Announce-then-act consent law (v0.3 — auto-triage never silent, brakes never weakened)
+        run: |
+          grep -qi 'announce' skills/dispatching-to-codex/SKILL.md
+          grep -qi 'announce' skills/dispatching-legion/SKILL.md
+          grep -q 'STOP' skills/dispatching-to-codex/SKILL.md
+          ! grep -q 'NEVER auto-dispatch' skills/dispatching-to-codex/SKILL.md
+          ! grep -q 'never automatically' AGENTS.md
