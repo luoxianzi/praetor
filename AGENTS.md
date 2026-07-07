@@ -27,6 +27,7 @@ A Claude Code plugin. Claude plans; the Codex CLI (default `gpt-5.5`, `xhigh` ef
 ## Repo map
 
 - `skills/dispatching-to-codex/` — the lifecycle (the core skill)
+- `skills/dispatching-legion/` — Legion Mode: N parallel workers in git worktrees, manifests, integration judge (design + live numbers: docs/LEGION.md)
 - `skills/writing-codex-briefs/` — brief + acceptance-criteria craft
 - `agents/codex-judge.md` — the binding judge
 - `commands/delegate.md` — `/praetor:delegate`

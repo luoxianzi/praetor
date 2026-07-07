@@ -14,7 +14,7 @@ You are given: a repo path, a branch name (`codex/<slug>`), and the frozen bar a
 
 1. **Tamper check.** `git -C <repo> diff HEAD -- .codex/ACCEPTANCE.md` must be EMPTY. Any change → instant **FAIL: tampered acceptance bar**.
 2. **Run every check** in `.codex/ACCEPTANCE.md`, exactly as written, against the working tree. Capture real stdout and exit codes.
-3. **Manifest check (legion dispatches only).** If `.codex/ACCEPTANCE.md` has a `MANIFEST:` section (the may-touch file list), run `git -C <repo> diff HEAD --name-only`. Any changed path NOT covered by the manifest globs → instant **FAIL: out-of-manifest file `<path>`** — before you even evaluate the checks. A worker that wandered into shared code is a lane failure, not a merge surprise.
+3. **Manifest check (legion dispatches only).** If `.codex/ACCEPTANCE.md` has a `MANIFEST:` section (the may-touch file list), run `git -C <repo> diff HEAD --name-only`. Any changed path NOT covered by the manifest globs → instant **FAIL: out-of-manifest file `<path>`** — before you even evaluate the checks. A worker that wandered into shared code is a lane failure, not a merge surprise. Also list untracked files (`git -C <repo> status --porcelain`): executor-side tool noise (e.g. `.serena/`, `.codex/codex.err`) outside the manifest is an **advisory note**, not an automatic FAIL — but flag anything the GOAL itself required creating outside the manifest, and remind the planner to commit manifest paths only (never `git add -A`).
 4. **Review the diff** (`git -C <repo> diff HEAD`) against the GOAL:
    - Does it actually achieve the stated GOAL?
    - Out-of-scope edits? Deleted or weakened tests? Commented-out assertions? Stubbed/faked results? Silent fallbacks? Any of these → **FAIL**.

@@ -30,17 +30,17 @@ Sibling directory, never inside the repo. Copy untracked env files a lane's chec
 
 **4. Dispatch ∥N.** Launch all lanes as parallel background tasks, each rooted in its worktree, brief via quoted stdin heredoc (never interpolate):
 ```
-codex exec -m gpt-5.5 -c model_reasoning_effort="xhigh" --sandbox workspace-write -C ../<repo>-legion/<dispatch-id>/<lane> - 2>/dev/null <<'PRAETOR_BRIEF'
+codex exec -m gpt-5.5 -c model_reasoning_effort="xhigh" --sandbox workspace-write -C ../<repo>-legion/<dispatch-id>/<lane> - 2>"../<repo>-legion/<dispatch-id>/<lane>/.codex/codex.err" <<'PRAETOR_BRIEF'
 <self-contained brief for this lane>
 PRAETOR_BRIEF
 ```
-Capture each lane's **session id** immediately (needed for retries). Hard timeout 600000 ms per lane. `PRAETOR_MODEL`/`PRAETOR_EFFORT`/relay overrides apply to all lanes identically.
+Route stderr to the lane's untracked `.codex/codex.err` — **never `2>/dev/null`**: Codex prints the **session id** (needed for retries) on stderr, and /dev/null eats it (live-test finding). Capture it right after dispatch: `grep -m1 'session id:' <lane>/.codex/codex.err`. The reasoning stream stays in the file, out of your context. Hard timeout 600000 ms per lane. `PRAETOR_MODEL`/`PRAETOR_EFFORT`/relay overrides apply to all lanes identically.
 
 **5. Watch.** Wait on background completions. Before acting on any completion and before every retry/merge, check the STOP file → if present, kill all codex processes, jump to Cleanup with a salvage report. One plain-language line per lane event ("legion: 3 workers dispatched" / "lane api-rename finished, judging" / "lane api-rename PASS" / "lane docs FAIL: test x failed").
 
 **6. Judge (sequential).** After each lane finishes, spawn a fresh `codex-judge` subagent pointed at that lane's worktree + branch. It runs the frozen checks, the tamper check, AND the manifest check (any file outside MANIFEST → FAIL). No parallel judges in v0.2. FAIL → re-brief via `codex exec resume <that lane's session-id> - <<'PRAETOR_BRIEF' … PRAETOR_BRIEF` (stdin rule). Per-lane cap 2 retries. **Legion-wide retry budget = N+1 total** across all lanes; when it's spent, remaining FAIL lanes go straight to takeover — no resume. **Partition-smell brake:** if 2+ lanes FAIL their first attempt, stop retrying everything and offer to serialize — the partition is likely wrong, not the workers.
 
-**7. Merge (ordered, after every lane has a final verdict).** For each PASS lane: planner commits the work in its worktree (Codex never commits), drops `.codex/ACCEPTANCE.md` from the branch (`git rm .codex/ACCEPTANCE.md && git commit -m "praetor: drop acceptance bar"`), then merges lanes into the base branch in the declared order. **Any textual merge conflict = proof of a manifest breach that slipped both gates → halt all merging immediately, loud report, never auto-resolve.**
+**7. Merge (ordered, after every lane has a final verdict).** For each PASS lane: planner commits the work in its worktree (Codex never commits) — **add the manifest paths only (`git add <manifest globs>`), never `git add -A`**: executor-side tool noise (e.g. `.serena/`, `.codex/codex.err`) must not enter the repo (live-test finding). Then drop `.codex/ACCEPTANCE.md` from the branch (`git rm .codex/ACCEPTANCE.md && git commit -m "praetor: drop acceptance bar"`), then merge lanes into the base branch in the declared order. **Any textual merge conflict = proof of a manifest breach that slipped both gates → halt all merging immediately, loud report, never auto-resolve.**
 
 **8. Integrate (mandatory).** Spawn one fresh integration `codex-judge` on the merged tree: integration bar = union of all lanes' checks + whole-tree gates (typecheck/build/test) declared and frozen at Muster. This is the only gate that catches "each lane green alone, red together". FAIL → revert the last-merged lane, re-run to bisect the culprit, revert it, report it as FAIL. A legion is never "done" until integration PASSes.
 

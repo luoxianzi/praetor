@@ -73,6 +73,8 @@ Same laws, per lane. Zero new config: praetor sets the worker count from the tas
 
 Real speedup exists only when the split is real. If it isn't, that's not a legion — it's one dispatch, and praetor says so.
 
+Design rationale + live combat results (2.84× measured, and the trap the judge caught): **[docs/LEGION.md](docs/LEGION.md)**.
+
 ## Measured, not promised
 
 Real numbers from repeated local runs are published here before anything else is claimed. Each row: one task class, wall-clock and token cost of *dispatch vs. Claude doing it directly*, and the judge's first-pass verdict rate:
@@ -82,6 +84,8 @@ Real numbers from repeated local runs are published here before anything else is
 | Bulk mechanical edit — API rename across 16 files | ~1 min | ~4 min (2.6 min Codex + 1.4 min judge) | **Judge: PASS first try** (12-point review) — merged without reading the diff |
 | Tiny task — one-line function | seconds | 1.7 min — and the 1st attempt died at the 4-min timeout | **Don't dispatch small tasks.** The skill says so before you waste the minutes |
 | Unplanned bonus: transient stall | — | one 29-min zero-write hang → killed by the timeout law → retry succeeded in 2.6 min | **Loud takeover, never silent failure** — the law fired in real life |
+| **Legion (v0.2): 3 parallel implementations** | ~6 min serial est. | **2 m 08 s wall — 2.84× speedup** | 3/3 judges PASS first try · zero-conflict merge · **integration judge PASS** |
+| **Legion trap: brief lured the worker outside its manifest** | — | worker complied, tests green | **Judge FAILed the green-tests lane**, naming the exact file — [full combat report](docs/LEGION.md) |
 
 First published runs — n=1 per arm, synthetic fixtures, one machine; medians replace these as repetitions accumulate. Full honesty: **2 of 4 dispatch attempts stalled** on our test machine and were killed by the hard timeout; both retries succeeded, and the judge passed delivered work on the first review. Wall-clock favors solo on small fixtures — dispatch pays in **quota shift and verified merges**, not raw speed.
 

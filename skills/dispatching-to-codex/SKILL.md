@@ -31,19 +31,21 @@ Bad dispatches: design work, subtle debugging, anything ambiguous, tiny tasks, a
 3. **Brief + dispatch.** Self-contained brief (Codex sees zero chat history). Pass the brief via **stdin with a quoted heredoc** — never interpolate it into the command line (quotes/backticks in task text would break the shell or inject):
 
    ```
-   codex exec -m gpt-5.5 -c model_reasoning_effort="xhigh" --sandbox workspace-write - 2>/dev/null <<'PRAETOR_BRIEF'
+   codex exec -m gpt-5.5 -c model_reasoning_effort="xhigh" --sandbox workspace-write - 2>.codex/codex.err <<'PRAETOR_BRIEF'
    <the brief>
    PRAETOR_BRIEF
    ```
 
+   Route stderr to the untracked `.codex/codex.err` — **never `2>/dev/null`**: the session id you need for retries is printed on stderr (live-test finding). Capture it right after dispatch: `grep -m1 'session id:' .codex/codex.err`. The reasoning stream stays in the file, out of your context.
+
    Model/effort overrides, in priority order: `PRAETOR_MODEL` / `PRAETOR_EFFORT` env vars (use verbatim if set) → preflight reported `config=custom` (active relay provider: DROP the `-m`/`-c` flags, keep `--sandbox`, respect their config) → stock default above. Never `danger-full-access`.
    **Hard timeout:** run the dispatch through your shell tool's timeout at 600000 ms (10 min) — never unbounded. Timeout fired → record `A-TIMEOUT-KILLED` in the verdict history, reset the tree (`git checkout -- . && git clean -fd -e .codex`), and retry; a timeout consumes one of the 2 retries (Law 3).
-   Note the **session id** Codex prints at dispatch start — you need it for retries. Big output → `-o <file>`, never into your context.
+   Big output → `-o <file>`, never into your context.
 4. **Judge.** Spawn a FRESH subagent using the plugin's `codex-judge` agent + repo path + branch name. Codex's work is UNCOMMITTED — the judge reviews the working tree (`git diff HEAD`), runs every frozen check, checks the bar wasn't moved. Returns PASS or FAIL + evidence.
-5. **Resolve.** PASS → you commit (Codex never commits) and report in plain language. FAIL → re-brief via the same stdin rule as step 3 (never interpolate the fix text into the command line):
+5. **Resolve.** PASS → you commit (Codex never commits) — **add the intended files only, never `git add -A`** (executor-side tool noise must not enter the repo) — and report in plain language. FAIL → re-brief via the same stdin rule as step 3 (never interpolate the fix text into the command line):
 
    ```
-   codex exec resume <session-id> - 2>/dev/null <<'PRAETOR_BRIEF'
+   codex exec resume <session-id> - 2>>.codex/codex.err <<'PRAETOR_BRIEF'
    <the re-brief: judge's reasons + what to fix, same frozen bar>
    PRAETOR_BRIEF
    ```
