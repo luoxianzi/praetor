@@ -40,7 +40,15 @@ Bad dispatches: design work, subtle debugging, anything ambiguous, tiny tasks, a
    **Hard timeout:** run the dispatch through your shell tool's timeout at 600000 ms (10 min) — never unbounded. Timeout fired → record `A-TIMEOUT-KILLED` in the verdict history, reset the tree (`git checkout -- . && git clean -fd -e .codex`), and retry; a timeout consumes one of the 2 retries (Law 3).
    Note the **session id** Codex prints at dispatch start — you need it for retries. Big output → `-o <file>`, never into your context.
 4. **Judge.** Spawn a FRESH subagent using the plugin's `codex-judge` agent + repo path + branch name. Codex's work is UNCOMMITTED — the judge reviews the working tree (`git diff HEAD`), runs every frozen check, checks the bar wasn't moved. Returns PASS or FAIL + evidence.
-5. **Resolve.** PASS → you commit (Codex never commits) and report in plain language. FAIL → re-brief with `codex exec resume <session-id> "<fix>"` using the id captured at dispatch; if you did not capture one, send a fresh full brief instead — **never `resume --last`** (it resumes the machine's most recent Codex session and can hijack an unrelated task). Max 2 retries, then loud takeover.
+5. **Resolve.** PASS → you commit (Codex never commits) and report in plain language. FAIL → re-brief via the same stdin rule as step 3 (never interpolate the fix text into the command line):
+
+   ```
+   codex exec resume <session-id> - 2>/dev/null <<'PRAETOR_BRIEF'
+   <the re-brief: judge's reasons + what to fix, same frozen bar>
+   PRAETOR_BRIEF
+   ```
+
+   Use the session id captured at dispatch; if you did not capture one, send a fresh full dispatch instead — **never `resume --last`** (it resumes the machine's most recent Codex session and can hijack an unrelated task). Max 2 retries, then loud takeover.
 6. **Cleanup.** PASS → ask the user in one line: merge `codex/<slug>` now, or leave the branch for their review — never merge without their word. Before any merge, drop the bar from the branch (`git rm .codex/ACCEPTANCE.md && git commit -m "praetor: drop acceptance bar"`) so `.codex/` never reaches the base branch. FAIL/takeover → switch back to the base branch and delete `codex/<slug>`. In ALL outcomes, back on the original branch: restore stashed work if step 1 stashed it (`git stash pop`), then append one line to `.codex/ledger.jsonl` (keep it untracked — a local audit log, not repo content): `{task, model, verdict_history, wall_seconds, dispatched_at}`.
 
 **Kill switch:** a `STOP` file in the repo root halts all dispatching — check before every dispatch.

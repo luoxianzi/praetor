@@ -39,3 +39,8 @@ jobs:
           grep -q 'git-state operation' skills/dispatching-to-codex/SKILL.md
           grep -q 'writable roots' skills/dispatching-to-codex/SKILL.md
           grep -q 'run ANY git command' skills/writing-codex-briefs/SKILL.md
+
+      - name: No command-line prompt interpolation (v0.1.3 law — briefs and re-briefs go via stdin)
+        run: |
+          test "$(grep -c 'PRAETOR_BRIEF' skills/dispatching-to-codex/SKILL.md)" -ge 4
+          ! grep -qE 'resume <session-id> "' skills/dispatching-to-codex/SKILL.md
