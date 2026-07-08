@@ -20,6 +20,19 @@ jobs:
         run: |
           bash -n skills/dispatching-to-codex/preflight.sh
           bash -n docs/assets/demo-replay.sh
+          for f in bin/*; do bash -n "$f"; test -x "$f"; done
+          jq empty hooks/hooks.json
+          grep -q 'praetor-gate' hooks/hooks.json
+
+      - name: Harness laws hold — live test suite against a fake executor
+        run: ./tests/harness.test.sh
+
+      - name: Harness is wired into the laws (v0.4)
+        run: |
+          grep -q 'praetor-dispatch' skills/dispatching-to-codex/SKILL.md
+          grep -q 'praetor-verdict' agents/codex-judge.md
+          grep -q 'praetor-manifest-check' skills/dispatching-legion/SKILL.md
+          grep -q 'praetor-dispatch -C' skills/dispatching-legion/SKILL.md
 
       - name: Skills, agents, and commands carry frontmatter
         run: |
@@ -63,8 +76,10 @@ jobs:
           grep -q "discard the branch's working tree first" skills/dispatching-to-codex/SKILL.md
           # D3: STOP resolves the git toplevel, not the shell cwd
           grep -q 'TOPLEVEL' skills/dispatching-to-codex/preflight.sh
-          # D4: tamper check counts freeze commits, not just the dirty diff
-          grep -q 'exactly ONE commit' agents/codex-judge.md
+          # D4: tamper check anchors on the bar's most recent add, not just the dirty diff
+          grep -q 'diff-filter=A' agents/codex-judge.md
+          grep -q 'diff-filter=A' bin/praetor-dispatch
+          grep -q 'diff-filter=A' bin/praetor-verdict
           # D5: judge reads untracked-file content in all modes
           grep -q 'status --porcelain' agents/codex-judge.md
           grep -q 'untracked file' agents/codex-judge.md

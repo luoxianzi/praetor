@@ -99,6 +99,13 @@ What happens next:
 - **Git-state boundary** — Codex edits files, never git; `.git` stays read-only by design
 - **Zero config** — relay configs auto-respected; two env vars if you must
 
+**The harness (v0.4) — laws enforced in code, not vibes**
+- **praetor-dispatch** — refuses to launch on a STOP file, an unfrozen or amended bar, or attempt 4; a watchdog kills a hung run at the deadline. The retry cap survives even context compaction, because it lives on disk
+- **praetor-verdict** — the judge's own pen: re-verifies the frozen bar's hash before writing; an amended bar records **TAMPERED**, never PASS
+- **the commit gate** — a hook that physically blocks `git commit` / `git merge` on `codex/*` branches without a recorded judge PASS whose bar hash still matches. "A FAIL cannot be overridden" stopped being a promise and became a refusal
+- **praetor-manifest-check** — proves legion lanes pairwise disjoint (static containment + file-level) before any worker launches
+- All of it tested live: a 32-assertion suite runs the laws against a fake executor in CI — [tests/harness.test.sh](tests/harness.test.sh)
+
 ## Legion Mode — many workers, in parallel
 
 The praetor commanded legions, plural. When a job splits into **2–5 genuinely independent, mechanical pieces**, praetor spots the split itself, announces the muster table (lanes, files, checks, the expected speedup), and runs each piece in its own git worktree with its own frozen bar and its own judge — then merges them in order behind a **mandatory integration judge** that catches "each piece passed alone, broke together." (Asking explicitly — *"dispatch these in parallel"* / *"派几路 codex 一起干"* — works too.)

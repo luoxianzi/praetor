@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+# praetor-gate — PreToolUse hook on Bash. The verdict ratchet:
+# on a codex/* branch, committing real work needs a recorded judge PASS whose
+# bar hash still matches; merging (or pulling) codex/* needs the same from the
+# merged branch. Law 2 stops being a choice the planner makes and becomes one
+# the harness makes.
+#
+# Hot path first: this runs on EVERY Bash call — bail in microseconds unless
+# the command is really a git commit/merge/pull (token-parsed, not substring:
+# a commit MESSAGE quoting "git merge codex/x" must not trip the gate).
+# Exit 0 = allow; exit 2 = block (stderr goes back to the model). It is a
+# ratchet against drift and forgetting, not a prison — see docs/DESIGN.md.
+set -u
+
+INPUT="$(cat)"
+command -v jq >/dev/null 2>&1 || exit 0     # no jq → gate inactive, prose law still applies
+CMD="$(printf '%s' "${INPUT}" | jq -r '.tool_input.command // empty' 2>/dev/null)"
+[ -z "${CMD}" ] && exit 0
+
+case "${CMD}" in
+  *git*) : ;;
+  *) exit 0 ;;
+esac
+
+# Token-aware engagement: `git`, then optional flags (incl. -C <dir>), then the
+# subcommand as its own word — start-of-command or after a separator only.
+SEP='(^|[;&|(]|&&|\|\|)[[:space:]]*'
+PRE='(command[[:space:]]+)?git([[:space:]]+(-C[[:space:]]+[^[:space:]]+|--?[A-Za-z0-9][A-Za-z0-9-]*(=[^[:space:]]*)?))*[[:space:]]+'
+IS_COMMIT=0; IS_MERGE=0
+printf '%s' "${CMD}" | grep -qE "${SEP}${PRE}commit([[:space:]]|$)" && IS_COMMIT=1
+printf '%s' "${CMD}" | grep -qE "${SEP}${PRE}(merge|pull)([[:space:]]|$)" && IS_MERGE=1
+[ ${IS_COMMIT} -eq 0 ] && [ ${IS_MERGE} -eq 0 ] && exit 0
+
+# Resolve WHERE the git command runs: `git -C <dir>` and a leading `cd <dir> &&`
+# both escape a cwd-only check (found in adversarial review — legion lanes
+# are worktrees the planner drives from outside).
+CWD="$(printf '%s' "${INPUT}" | jq -r '.cwd // empty' 2>/dev/null)"
+[ -n "${CWD}" ] && cd "${CWD}" 2>/dev/null
+TARGET="$(printf '%s' "${CMD}" | sed -nE 's/.*git[[:space:]]+-C[[:space:]]+"?([^";&| ]+)"?.*/\1/p' | head -1)"
+if [ -z "${TARGET}" ]; then
+  TARGET="$(printf '%s' "${CMD}" | sed -nE 's/^[[:space:]]*cd[[:space:]]+"?([^";&| ]+)"?[[:space:]]*&&.*/\1/p' | head -1)"
+fi
+[ -n "${TARGET}" ] && cd "${TARGET}" 2>/dev/null
+git rev-parse --is-inside-work-tree >/dev/null 2>&1 || exit 0
+
+state_get() { # state_get <file> <key>
+  sed -n 's/.*"'"$2"'"[[:space:]]*:[[:space:]]*"\{0,1\}\([^",}]*\)"\{0,1\}.*/\1/p' "$1" | head -1
+}
+deny() { echo "praetor-gate BLOCKED: $*" >&2; exit 2; }
+
+# Quoted spans stripped, so refs are only ever read from real arguments,
+# never from -m "..." message text.
+CMD_NOQ="$(printf '%s' "${CMD}" | sed -E "s/'[^']*'//g; s/\"[^\"]*\"//g")"
+
+BRANCH="$(git branch --show-current 2>/dev/null || true)"
+
+# ---- merge / pull of codex/* (from any branch) --------------------------------
+if [ ${IS_MERGE} -eq 1 ]; then
+  case "${CMD}" in *--abort*|*--continue*) exit 0 ;; esac   # the escape hatch is never barred
+  SRC="$(printf '%s' "${CMD_NOQ}" | grep -oE 'codex/[A-Za-z0-9._-]+' | head -1)"
+  if [ -n "${SRC}" ]; then
+    # Find the state for that branch: its worktree if it has one, else this tree.
+    WT="$(git worktree list --porcelain 2>/dev/null | awk -v b="refs/heads/${SRC}" '
+      /^worktree /{w=substr($0,10)} $1=="branch"&&$2==b{print w; exit}')"
+    ST=""
+    if [ -n "${WT}" ] && [ -f "${WT}/.codex/state.json" ]; then ST="${WT}/.codex/state.json"
+    elif [ -f ".codex/state.json" ] && [ "$(state_get .codex/state.json slug)" = "${SRC}" ]; then ST=".codex/state.json"
+    fi
+    [ -z "${ST}" ] && deny "no recorded verdict for ${SRC} — praetor branches merge only after a judge PASS (not praetor work? rename the branch out of codex/*)"
+    V="$(state_get "${ST}" verdict)"
+    [ "${V}" = "PASS" ] || deny "verdict for ${SRC} is '${V:-none}', not PASS — Law 2: no acceptance without the judge; a FAIL cannot be overridden"
+  fi
+  [ ${IS_COMMIT} -eq 0 ] && exit 0
+fi
+
+# ---- git commit on a codex/* branch --------------------------------------------
+case "${BRANCH}" in codex/*) : ;; *) exit 0 ;; esac
+
+ST=".codex/state.json"
+
+# Amending after dispatch rewrites the frozen bar or judged history. Never.
+case "${CMD}" in
+  *--amend*)
+    [ -f "${ST}" ] && deny "--amend on ${BRANCH} after dispatch rewrites the frozen bar or judged history — make a new commit, or a fresh dispatch"
+    ;;
+esac
+
+# What would this commit actually include? The index alone is not the answer:
+# `git commit -a` and `git commit <pathspec>` stage at commit time with an
+# empty index at hook time (found in adversarial review — the -am idiom
+# bypassed the gate entirely).
+STAGED_REAL="$(git diff --cached --name-only 2>/dev/null | grep -v '^\.codex/' || true)"
+AFLAG=0
+printf '%s' "${CMD_NOQ}" | grep -qE '(^|[[:space:]])--all([[:space:]]|$)' && AFLAG=1
+printf '%s' "${CMD_NOQ}" | grep -qE '(^|[[:space:]])-[A-Za-z]*a[A-Za-z]*([[:space:]]|$)' && AFLAG=1
+DIRTY_REAL=""
+[ ${AFLAG} -eq 1 ] && DIRTY_REAL="$(git status --porcelain 2>/dev/null | grep -v ' \.codex/' | grep -v '^?? ' || true)"
+# Pathspec after `commit`: any bare token that isn't a flag. Message text was
+# stripped with the quotes, and unquoted single-word arguments to -m/-F/-t/-c/
+# --message are consumed too (the freeze idiom `git commit -m freeze` is not a
+# pathspec — found by this suite's own regression run).
+PATHSPEC="$(printf '%s' "${CMD_NOQ}" \
+  | sed -nE "s/.*git[^;&|]*[[:space:]]commit//p" \
+  | sed -E 's/(^|[[:space:]])(-[mFtc]|--message|--file)(=|[[:space:]]+)[^[:space:]]+/ /g' \
+  | tr ' ' '\n' | grep -vE '^$|^-' | grep -v '^\.codex/' | head -1 || true)"
+
+if [ -z "${STAGED_REAL}" ] && [ -z "${DIRTY_REAL}" ] && [ -z "${PATHSPEC}" ]; then
+  exit 0   # .codex housekeeping (freeze / drop-bar) or an empty commit git will reject itself
+fi
+
+# Real work is being committed: that requires a recorded PASS on a bar that hasn't moved.
+[ -f "${ST}" ] || deny "committing work on ${BRANCH} with no dispatch state — dispatch through praetor-dispatch first (not praetor work? rename the branch out of codex/*)"
+V="$(state_get "${ST}" verdict)"; SLUG="$(state_get "${ST}" slug)"; REC="$(state_get "${ST}" bar_blob)"
+[ "${SLUG}" = "${BRANCH}" ] || deny "state file belongs to '${SLUG}', not '${BRANCH}' — stale state; re-dispatch"
+[ "${V}" = "PASS" ] || deny "verdict is '${V:-none}', not PASS — Law 2: no acceptance without the judge; a FAIL cannot be overridden"
+NOW_BLOB="$(git ls-tree HEAD -- .codex/ACCEPTANCE.md 2>/dev/null | awk '{print $3}')"
+[ -n "${REC}" ] && [ "${NOW_BLOB}" != "${REC}" ] && deny "the frozen bar changed after the verdict (recorded ${REC}, HEAD has ${NOW_BLOB:-none}) — a moved bar voids its PASS"
+exit 0

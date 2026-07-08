@@ -1,0 +1,2 @@
+one src/a/**
+two src/ab/**

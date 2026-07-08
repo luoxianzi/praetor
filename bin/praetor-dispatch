@@ -1,0 +1,211 @@
+#!/usr/bin/env bash
+# praetor-dispatch — the dispatch wrapper. Laws enforced in code, not vibes:
+#   STOP at the git toplevel refuses to launch (exit 3)
+#   write dispatches refuse to run without a frozen, committed bar (exit 4)
+#   the bar's blob hash is recorded at dispatch — an amended bar can never verify (D4)
+#   attempts are counted on disk — attempt 4 is refused even across context compaction (exit 5)
+#   a hard timeout kills a hung executor (exit 124) — never unbounded
+# The brief arrives on stdin (heredoc, never interpolated). The wrapper never
+# touches git state: it reads git, writes only untracked .codex/ files.
+# Write dispatches use .codex/state.json (keyed to the codex/* branch);
+# analysis dispatches use .codex/state-analysis.json (keyed to the brief hash)
+# so a mid-task analysis can never clobber a write dispatch's verdict or ratchet.
+set -u
+
+MODE="write"            # write | analysis
+RESUME=""               # session id for a retry
+CDDIR=""                # run rooted here (legion lanes)
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --analysis) MODE="analysis" ;;
+    --resume)   RESUME="${2:?--resume needs a session id}"; shift ;;
+    -C)         CDDIR="${2:?-C needs a directory}"; shift ;;
+    *) echo "praetor-dispatch: unknown flag $1" >&2; exit 64 ;;
+  esac
+  shift
+done
+[ -n "${CDDIR}" ] && { cd "${CDDIR}" || { echo "praetor-dispatch: cannot cd ${CDDIR}" >&2; exit 64; }; }
+
+command -v codex >/dev/null 2>&1 || { echo "praetor-dispatch: codex not on PATH" >&2; exit 1; }
+
+# Hard-timeout value must be a positive integer, or the watchdog would
+# silently never fire (found in adversarial review).
+TIMEOUT="${PRAETOR_TIMEOUT:-600}"
+case "${TIMEOUT}" in
+  ''|*[!0-9]*) echo "praetor-dispatch: PRAETOR_TIMEOUT='${TIMEOUT}' is not a whole number of seconds — using 600" >&2; TIMEOUT=600 ;;
+esac
+
+IN_GIT="yes"; git rev-parse --is-inside-work-tree >/dev/null 2>&1 || IN_GIT="no"
+
+# LAW: STOP halts everything — resolved at the repo root, not the cwd.
+TOPLEVEL="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+if [ -f "${TOPLEVEL}/STOP" ] || [ -f "STOP" ]; then
+  echo "praetor-dispatch: REFUSED — STOP file present (${TOPLEVEL}/STOP)" >&2
+  exit 3
+fi
+
+mkdir -p .codex
+
+# Buffer the brief first (background children get /dev/null stdin, and the
+# analysis ratchet is keyed to the brief's hash).
+BRIEF=".codex/brief.txt"
+cat > "${BRIEF}"
+if [ ! -s "${BRIEF}" ] && [ -z "${RESUME}" ]; then
+  echo "praetor-dispatch: REFUSED — empty brief on stdin (send it via a quoted heredoc)" >&2
+  exit 64
+fi
+
+json_get() { # json_get <file> <key>  — crude, schema is ours and flat
+  [ -f "$1" ] || return 1
+  sed -n 's/.*"'"$2"'"[[:space:]]*:[[:space:]]*"\{0,1\}\([^",}]*\)"\{0,1\}.*/\1/p' "$1" | head -1
+}
+
+BAR_BLOB=""
+if [ "${MODE}" = "write" ]; then
+  STATE=".codex/state.json"
+  [ "${IN_GIT}" = "yes" ] || { echo "praetor-dispatch: REFUSED — write dispatches need a git repo" >&2; exit 4; }
+  SLUG="$(git branch --show-current 2>/dev/null || echo detached)"
+  case "${SLUG}" in
+    codex/*) : ;;
+    *) echo "praetor-dispatch: REFUSED — write dispatches run on a codex/* branch (Isolate first; current: ${SLUG})" >&2; exit 4 ;;
+  esac
+  case "${SLUG}" in
+    *[!A-Za-z0-9._/-]*) echo "praetor-dispatch: REFUSED — branch name '${SLUG}' has characters the state file cannot key safely; use [A-Za-z0-9._-]" >&2; exit 64 ;;
+  esac
+  # LAW 1: no dispatch without a frozen bar committed to git. "Frozen" is
+  # anchored to the bar's MOST RECENT ADD (a plain count would self-brick the
+  # repo after the first fast-forward merge left old freeze commits in history
+  # — found in adversarial review): after that add, nothing may touch it.
+  if ! git cat-file -e "HEAD:.codex/ACCEPTANCE.md" 2>/dev/null; then
+    echo "praetor-dispatch: REFUSED — .codex/ACCEPTANCE.md is not committed (Law 1: freeze the bar first)" >&2
+    exit 4
+  fi
+  if [ -n "$(git diff HEAD -- .codex/ACCEPTANCE.md)" ]; then
+    echo "praetor-dispatch: REFUSED — .codex/ACCEPTANCE.md differs from HEAD (the bar must be frozen, not floating)" >&2
+    exit 4
+  fi
+  ADDC="$(git log --diff-filter=A --format=%H -n1 HEAD -- .codex/ACCEPTANCE.md)"
+  if [ -z "${ADDC}" ]; then
+    echo "praetor-dispatch: REFUSED — cannot locate the bar's freeze commit" >&2
+    exit 4
+  fi
+  POST="$(git rev-list --count "${ADDC}..HEAD" -- .codex/ACCEPTANCE.md)"
+  if [ "${POST}" != "0" ]; then
+    echo "praetor-dispatch: REFUSED — ${POST} commit(s) touched the bar after its freeze (a re-freeze is a NEW dispatch on a fresh branch)" >&2
+    exit 4
+  fi
+  BAR_BLOB="$(git ls-tree HEAD -- .codex/ACCEPTANCE.md | awk '{print $3}')"
+  # D4 in code: if a state file already exists for this slug, the recorded blob must still match.
+  if [ "$(json_get "${STATE}" slug)" = "${SLUG}" ]; then
+    REC="$(json_get "${STATE}" bar_blob)"
+    if [ -n "${REC}" ] && [ "${REC}" != "${BAR_BLOB}" ]; then
+      echo "praetor-dispatch: REFUSED — the committed bar changed since dispatch (recorded ${REC}, now ${BAR_BLOB}). An amended bar is a tampered bar." >&2
+      exit 4
+    fi
+  fi
+else
+  # Analysis: its own state file, keyed by brief hash — a new task starts a
+  # fresh budget; the same failing brief still hits the Law-3 wall.
+  STATE=".codex/state-analysis.json"
+  SLUG="analysis-$(cksum "${BRIEF}" | awk '{print $1}')"
+fi
+
+# LAW 3 in code: attempts live on disk; 1 initial + 2 retries, then takeover.
+ATTEMPTS=0
+if [ "$(json_get "${STATE}" slug)" = "${SLUG}" ]; then
+  ATTEMPTS="$(json_get "${STATE}" attempts)"; ATTEMPTS="${ATTEMPTS:-0}"
+fi
+case "${ATTEMPTS}" in *[!0-9]*) ATTEMPTS=0 ;; esac
+if [ "${ATTEMPTS}" -ge 3 ]; then
+  echo "praetor-dispatch: REFUSED — attempt $((ATTEMPTS+1)) for '${SLUG}'. Law 3: max 2 retries, then loud takeover. Do the work yourself and say delegation failed." >&2
+  exit 5
+fi
+ATTEMPTS=$((ATTEMPTS+1))
+
+# Analysis mode: snapshot the tree so the planner can act on EXACTLY what changed
+# (the user's pre-existing dirty state is sacred — D1).
+if [ "${MODE}" = "analysis" ] && [ "${IN_GIT}" = "yes" ]; then
+  git status --porcelain > .codex/pre.txt 2>/dev/null || true
+fi
+
+# Model flags: env overrides > relay config (drop flags) > certified default.
+FLAGS=""
+if [ -n "${PRAETOR_MODEL:-}" ] || [ -n "${PRAETOR_EFFORT:-}" ]; then
+  [ -n "${PRAETOR_MODEL:-}" ]  && FLAGS="${FLAGS} -m ${PRAETOR_MODEL}"
+  [ -n "${PRAETOR_EFFORT:-}" ] && FLAGS="${FLAGS} -c model_reasoning_effort=\"${PRAETOR_EFFORT}\""
+elif [ -f "${HOME}/.codex/config.toml" ] \
+   && awk '/^[[:space:]]*\[/{exit} /^[[:space:]]*model_provider[[:space:]]*=/{found=1; exit} END{exit !found}' \
+       "${HOME}/.codex/config.toml" 2>/dev/null; then
+  FLAGS=""   # active relay: respect the user's config entirely
+else
+  FLAGS='-m gpt-5.5 -c model_reasoning_effort="xhigh"'
+fi
+SANDBOX="workspace-write"; [ "${MODE}" = "analysis" ] && SANDBOX="read-only"
+SKIPGIT=""; [ "${IN_GIT}" = "no" ] && SKIPGIT="--skip-git-repo-check"
+
+# Record the attempt BEFORE launch (a kill -9 mid-run must still consume it).
+NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+printf '{"slug":"%s","mode":"%s","bar_blob":"%s","attempts":%s,"verdict":null,"updated_at":"%s"}\n' \
+  "${SLUG}" "${MODE}" "${BAR_BLOB}" "${ATTEMPTS}" "${NOW}" > "${STATE}"
+
+# Each attempt gets a fresh stderr capture (an appended file made `grep session
+# id` return attempt 1's id forever — found in adversarial review); prior
+# attempts are preserved as .codex/codex.err.<n>.
+[ -f .codex/codex.err ] && mv .codex/codex.err ".codex/codex.err.$((ATTEMPTS-1))" 2>/dev/null
+
+# Launch under a portable watchdog (macOS has no `timeout`). The watchdog
+# POLLS instead of long-sleeping, with stdio detached — a naive
+# `(sleep N && kill) &` leaves an orphan holding the caller's pipes for N
+# seconds after a fast run (found by this harness's own test suite).
+START=$(date +%s)
+if [ -n "${RESUME}" ]; then
+  # shellcheck disable=SC2086
+  codex exec ${FLAGS} --sandbox "${SANDBOX}" ${SKIPGIT} resume "${RESUME}" - < "${BRIEF}" 2>.codex/codex.err &
+else
+  # shellcheck disable=SC2086
+  codex exec ${FLAGS} --sandbox "${SANDBOX}" ${SKIPGIT} - < "${BRIEF}" 2>.codex/codex.err &
+fi
+CPID=$!
+(
+  ELAPSED=0
+  while kill -0 "${CPID}" 2>/dev/null; do
+    sleep 1
+    ELAPSED=$((ELAPSED+1))
+    if [ "${ELAPSED}" -ge "${TIMEOUT}" ]; then
+      # Children first (they inherit our stdout and would hold the pipe), then the leader.
+      pkill -TERM -P "${CPID}" 2>/dev/null
+      kill -TERM "${CPID}" 2>/dev/null
+      sleep 5
+      pkill -KILL -P "${CPID}" 2>/dev/null
+      kill -KILL "${CPID}" 2>/dev/null
+      break
+    fi
+  done
+) >/dev/null 2>&1 &
+WPID=$!
+wait "${CPID}"; RC=$?
+wait "${WPID}" 2>/dev/null
+WALL=$(( $(date +%s) - START ))
+
+if [ ${RC} -eq 143 ] || [ ${RC} -eq 137 ]; then
+  echo "praetor-dispatch: TIMEOUT-KILLED after ${TIMEOUT}s (attempt ${ATTEMPTS}/3, consumed). Reset the tree, then retry with a FRESH dispatch — never resume a killed session." >&2
+  RC=124
+elif [ ${RC} -ne 0 ]; then
+  echo "praetor-dispatch: codex exec exited ${RC} (attempt ${ATTEMPTS}/3, consumed). Read .codex/codex.err — if it is auth/login-shaped, stop and tell the user to run 'codex login'." >&2
+fi
+
+SID="$(grep 'session id:' .codex/codex.err 2>/dev/null | tail -1 | sed 's/.*session id:[[:space:]]*//' | tr -d '\r')"
+[ -n "${SID}" ] && echo "session-id: ${SID}"
+
+# Analysis mode: report EXACTLY what changed vs the snapshot; the wrapper deletes nothing.
+if [ "${MODE}" = "analysis" ] && [ "${IN_GIT}" = "yes" ]; then
+  git status --porcelain > .codex/post.txt 2>/dev/null || true
+  DELTA="$(comm -13 <(sort .codex/pre.txt) <(sort .codex/post.txt) | grep -v ' \.codex/' || true)"
+  if [ -n "${DELTA}" ]; then
+    echo "analysis-mode ALERT — the read-only run changed the tree (act on ONLY these paths; the user's other WIP is sacred):" >&2
+    printf '%s\n' "${DELTA}" >&2
+  fi
+fi
+
+echo "attempt: ${ATTEMPTS}/3 wall: ${WALL}s exit: ${RC}"
+exit ${RC}

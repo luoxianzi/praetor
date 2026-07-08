@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# praetor-verdict — run BY THE JUDGE (never the planner) as its final act.
+# Records the binding verdict into .codex/state.json, but FIRST re-verifies
+# the frozen bar mechanically: the committed bar's blob hash must equal the
+# hash recorded at dispatch. An amended, re-frozen, or floating bar can never
+# be blessed — the verdict written is TAMPERED, not PASS (D4, closed in code).
+# Usage: praetor-verdict PASS|FAIL [one-line summary]
+set -u
+
+VERDICT="${1:?usage: praetor-verdict PASS|FAIL [summary]}"; shift || true
+ASKED="${VERDICT}"
+SUMMARY="${*:-}"
+case "${VERDICT}" in PASS|FAIL) : ;; *) echo "praetor-verdict: verdict must be PASS or FAIL" >&2; exit 64 ;; esac
+# Sanitize the summary for our flat JSON (it is evidence metadata, not code).
+SUMMARY="$(printf '%s' "${SUMMARY}" | tr -d '"\\\n\r' | cut -c1-300)"
+
+STATE=".codex/state.json"
+[ -f "${STATE}" ] || { echo "praetor-verdict: no ${STATE} — was this dispatched through praetor-dispatch?" >&2; exit 65; }
+
+json_get() {
+  sed -n 's/.*"'"$1"'"[[:space:]]*:[[:space:]]*"\{0,1\}\([^",}]*\)"\{0,1\}.*/\1/p' "${STATE}" | head -1
+}
+SLUG="$(json_get slug)"; MODE="$(json_get mode)"; REC="$(json_get bar_blob)"; ATT="$(json_get attempts)"
+
+# The state must belong to THIS dispatch: a verdict is only ever recorded on a
+# write dispatch, on its own codex/* branch. A leftover state file from some
+# other run (an analysis dispatch, another branch) must never be blessed —
+# found live by the harness's own test suite.
+BRANCH="$(git branch --show-current 2>/dev/null || echo detached)"
+if [ "${MODE}" != "write" ] || [ "${SLUG}" != "${BRANCH}" ]; then
+  echo "praetor-verdict: REFUSED — state belongs to '${SLUG}' (mode ${MODE:-none}), but this is branch '${BRANCH}'. Stale or foreign state; re-dispatch through praetor-dispatch." >&2
+  exit 65
+fi
+
+if [ "${MODE}" = "write" ]; then
+  # The bar must still be: committed, clean, untouched since its most recent
+  # freeze (anchored to the bar's latest ADD — a plain history count would
+  # self-brick after the first merge left old freeze commits behind), and
+  # byte-identical to dispatch time.
+  NOW_BLOB="$(git ls-tree HEAD -- .codex/ACCEPTANCE.md 2>/dev/null | awk '{print $3}')"
+  DIRTY="$(git diff HEAD -- .codex/ACCEPTANCE.md 2>/dev/null)"
+  ADDC="$(git log --diff-filter=A --format=%H -n1 HEAD -- .codex/ACCEPTANCE.md 2>/dev/null)"
+  POST="1"
+  [ -n "${ADDC}" ] && POST="$(git rev-list --count "${ADDC}..HEAD" -- .codex/ACCEPTANCE.md 2>/dev/null)"
+  if [ -z "${NOW_BLOB}" ] || [ -n "${DIRTY}" ] || [ "${POST}" != "0" ] || [ "${NOW_BLOB}" != "${REC}" ]; then
+    VERDICT="TAMPERED"
+    SUMMARY="acceptance bar failed mechanical re-verification (recorded ${REC:-none}, now ${NOW_BLOB:-missing}, touched-after-freeze ${POST}, dirty $([ -n "${DIRTY}" ] && echo yes || echo no))"
+    echo "praetor-verdict: BAR TAMPER DETECTED — recording TAMPERED, not ${ASKED}" >&2
+  fi
+fi
+
+NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+printf '{"slug":"%s","mode":"%s","bar_blob":"%s","attempts":%s,"verdict":"%s","summary":"%s","updated_at":"%s"}\n' \
+  "${SLUG}" "${MODE}" "${REC}" "${ATT:-0}" "${VERDICT}" "${SUMMARY}" "${NOW}" > "${STATE}"
+echo "recorded: ${VERDICT} for ${SLUG}"
+[ "${VERDICT}" = "TAMPERED" ] && exit 66
+exit 0

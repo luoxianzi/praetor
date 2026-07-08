@@ -45,6 +45,28 @@ Config file (any) · model picker UI · per-project overrides · concurrency kno
 
 Escape hatches kept (all three): user's own codex config.toml (auto-respected) · `PRAETOR_MODEL`/`PRAETOR_EFFORT` env vars · plain-language per-task control ("don't send this to codex" / "stop delegating for now").
 
+## The thin harness (v0.4) — which laws moved into code, and which never will
+
+A 46-agent adversarial audit of praetor's own files found a consistent pattern: every check was airtight against the **executor** (who cannot commit) and blind to the **planner** (who can). The guarantees marketed as mechanical — "a FAIL cannot be overridden", STOP, the 2-retry cap, the frozen bar — were held only by the planner LLM choosing to obey prose. The audit's verdict on the medium was equally clear: the single worst defect found was the LLM *obeying* a wrong instruction perfectly, which more code could never have prevented. So the fix is split honestly in two:
+
+**Moved into code (the harness — ~300 lines of shell, zero new config):**
+
+| Law | Enforcer | What it refuses |
+|---|---|---|
+| STOP halts everything | `bin/praetor-dispatch` | launch, when `STOP` exists at the git toplevel (exit 3) |
+| No dispatch without a frozen bar | `bin/praetor-dispatch` | launch, unless `.codex/ACCEPTANCE.md` is committed, clean, and single-commit; records its blob hash (exit 4) |
+| Max 2 retries | `bin/praetor-dispatch` | attempt 4 — the counter lives on disk, so context compaction can't reset it (exit 5) |
+| Hard timeout | `bin/praetor-dispatch` | unbounded runs — a polling watchdog TERM-then-KILLs at the deadline (exit 124) |
+| Bar can't move after dispatch | `bin/praetor-verdict` | recording PASS when the bar's blob hash changed — writes TAMPERED instead (exit 66) |
+| A FAIL cannot be overridden | `bin/praetor-gate` (PreToolUse hook) | `git commit`/`git merge` on `codex/*` branches without a recorded PASS whose bar hash still matches (blocks the tool call) |
+| Legion lanes must be disjoint | `bin/praetor-manifest-check` | mustering, when any two lanes' globs contain each other or match the same tracked file |
+
+All of it is exercised live by `tests/harness.test.sh` (32 assertions against a fake executor) on every CI push. The suite earned its keep before shipping: it caught the wrapper's watchdog holding the caller's pipes open, and a verdict recorder that would have blessed a stale state file from a different dispatch.
+
+**Deliberately left as prose (and why):** triage, worth-it judgment, brief quality, partition design, diff-vs-GOAL review — the judgment layer. No script can own those decisions; that is what the planner is *for*. The harness polices exactly the places where the planner might drift, forget after compaction, or rationalize under retry pressure — never the places where it must think.
+
+**The trust model, stated plainly:** planner, judge, and harness all run as the same OS user. A determined planner could delete the state file or bypass the wrapper — the harness is a **ratchet, not a prison**. What it removes is every *soft* failure: absent-mindedness, compaction amnesia, "just this once" rationalization, and wrong-by-accident instructions. Malice by the tool operator against themselves is out of scope, on the same grounds that `git` doesn't stop you deleting `.git/`. The gate also stays out of your way: it engages only on `codex/*` branches and praetor merges; ordinary Bash calls cost a case-match, ordinary repos nothing.
+
 ## Launch plan (owner decision: GitHub only)
 
 No HN, no launch campaign. Publish the repo with: polished bilingual README (zh-CN treats relay users as first-class), and a **measured** benchmark table — dispatch vs. Claude-solo across task classes (wall-clock, Claude tokens, verdicts), from repeated local runs. Claims ship with data or don't ship.

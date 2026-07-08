@@ -1,0 +1,2 @@
+alpha src/**
+beta src/beta/**

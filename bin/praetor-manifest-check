@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+# praetor-manifest-check — legion muster gate. "Mechanically verify the
+# manifests are pairwise disjoint" now has a mechanism.
+# Input file: one lane per line —  <lane> <glob>   (a lane may span several lines)
+# Two tests, both must hold:
+#   1. static: no glob's fixed prefix path-contains another lane's prefix
+#      (src/** swallowing src/alpha/** is caught even before files exist)
+#   2. dynamic: expanding every glob against the repo's tracked files,
+#      no file matches two different lanes
+# exit 0 = disjoint · exit 1 = overlap (each conflict printed) · exit 64 = bad input
+set -u
+
+MF="${1:?usage: praetor-manifest-check <manifest-file>}"
+[ -f "${MF}" ] || { echo "praetor-manifest-check: no such file ${MF}" >&2; exit 64; }
+git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "praetor-manifest-check: not a git repo" >&2; exit 64; }
+
+FAIL=0
+LANES=(); GLOBS=()
+while read -r lane glob rest; do
+  [ -z "${lane}" ] && continue
+  case "${lane}" in \#*) continue ;; esac
+  [ -z "${glob}" ] && { echo "bad line (need: <lane> <glob>): ${lane}" >&2; exit 64; }
+  [ -n "${rest}" ] && { echo "bad line (one glob per line): ${lane} ${glob} ${rest}" >&2; exit 64; }
+  LANES+=("${lane}"); GLOBS+=("${glob}")
+done < "${MF}"
+[ "${#LANES[@]}" -ge 2 ] || { echo "praetor-manifest-check: fewer than 2 lanes — nothing to check" >&2; exit 64; }
+
+# --- static containment across DIFFERENT lanes ---
+# Wildcard globs are compared by RAW string-prefix of their fixed heads (this
+# catches mid-filename overlap like api*.ts vs api-v2*.ts, while src/a/** vs
+# src/ab/** stays disjoint because the '/' breaks the prefix). Literal paths
+# are matched against the other glob directly; two literals overlap only if equal.
+prefix_of() { printf '%s' "$1" | sed 's/[*?[].*$//'; }
+has_wild()  { case "$1" in *\**|*\?*|*\[*) return 0 ;; *) return 1 ;; esac; }
+globs_overlap() { # $1 $2 — do these two globs plausibly overlap?
+  A="$1"; B="$2"
+  if has_wild "${A}" && has_wild "${B}"; then
+    PA="$(prefix_of "${A}")"; PB="$(prefix_of "${B}")"
+    case "${PB}" in "${PA}"*) return 0 ;; esac
+    case "${PA}" in "${PB}"*) return 0 ;; esac
+    return 1
+  elif has_wild "${A}"; then
+    pat="${A//\*\*/*}"
+    # shellcheck disable=SC2254
+    case "${B}" in ${pat}) return 0 ;; *) return 1 ;; esac
+  elif has_wild "${B}"; then
+    pat="${B//\*\*/*}"
+    # shellcheck disable=SC2254
+    case "${A}" in ${pat}) return 0 ;; *) return 1 ;; esac
+  else
+    [ "${A}" = "${B}" ]
+  fi
+}
+i=0
+while [ $i -lt ${#GLOBS[@]} ]; do
+  j=$((i+1))
+  while [ $j -lt ${#GLOBS[@]} ]; do
+    if [ "${LANES[$i]}" != "${LANES[$j]}" ]; then
+      if globs_overlap "${GLOBS[$i]}" "${GLOBS[$j]}"; then
+        echo "OVERLAP (static): lane ${LANES[$i]} '${GLOBS[$i]}' vs lane ${LANES[$j]} '${GLOBS[$j]}'"
+        FAIL=1
+      fi
+    fi
+    j=$((j+1))
+  done
+  i=$((i+1))
+done
+
+# --- dynamic: no tracked file may match two different lanes ---
+# case-pattern matching: convert ** to * (in case, * already crosses slashes)
+while IFS= read -r f; do
+  hit_lane=""
+  i=0
+  while [ $i -lt ${#GLOBS[@]} ]; do
+    pat="${GLOBS[$i]//\*\*/*}"
+    # shellcheck disable=SC2254
+    case "${f}" in
+      ${pat})
+        if [ -n "${hit_lane}" ] && [ "${hit_lane}" != "${LANES[$i]}" ]; then
+          echo "OVERLAP (file): ${f} matches lane ${hit_lane} AND lane ${LANES[$i]}"
+          FAIL=1
+        fi
+        hit_lane="${LANES[$i]}"
+        ;;
+    esac
+    i=$((i+1))
+  done
+done < <(git ls-files)
+
+if [ ${FAIL} -eq 0 ]; then
+  echo "disjoint: ${#GLOBS[@]} globs across lanes, no static or file-level overlap"
+  exit 0
+fi
+echo "NOT DISJOINT — fix the partition or serialize (when in doubt, one at a time)" >&2
+exit 1

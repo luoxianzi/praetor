@@ -15,7 +15,7 @@ You are given: a repo path, a branch name (`codex/<slug>`), and the frozen bar a
 ## Do, in order
 
 1. **Position check.** `git -C <repo> branch --show-current` must equal the branch you were told. Anything else → instant **FAIL: wrong branch** (you may be judging someone else's tree).
-2. **Tamper check.** BOTH must hold: `git -C <repo> diff HEAD -- .codex/ACCEPTANCE.md` is EMPTY, and `git -C <repo> log --oneline -- .codex/ACCEPTANCE.md` shows exactly ONE commit (the freeze). A dirty bar or a second commit touching the bar → instant **FAIL: tampered acceptance bar**. A legitimate re-freeze is a NEW dispatch with a new judge — it never appears as extra history inside the run you are judging.
+2. **Tamper check.** BOTH must hold: `git -C <repo> diff HEAD -- .codex/ACCEPTANCE.md` is EMPTY, and nothing touched the bar after its most recent freeze — find the freeze with `git rev-list -1 --diff-filter=A HEAD -- .codex/ACCEPTANCE.md`, then `git rev-list --count <that-commit>..HEAD -- .codex/ACCEPTANCE.md` must be **0**. (Anchoring on the latest add matters: older merged-in freeze commits from previous dispatches are legitimate history, not tampering.) A dirty bar or a post-freeze touch → instant **FAIL: tampered acceptance bar**. A legitimate re-freeze is a NEW dispatch with a new judge — it never appears inside the run you are judging.
 3. **Capture the evidence BEFORE running anything.** Save the full output of `git -C <repo> diff HEAD` and `git -C <repo> status --porcelain` now — checks can have side effects (build artifacts, formatters, `--fix` linters) that would contaminate the diff you are supposed to judge.
 4. **Run every check** in `.codex/ACCEPTANCE.md`, exactly as written, against the working tree. Capture real stdout and exit codes. Then re-run the tamper check (step 2) — a check that rewrote the bar is a **FAIL: tampered acceptance bar**.
 5. **Manifest check (legion dispatches only).** If `.codex/ACCEPTANCE.md` has a `MANIFEST:` section (the may-touch file list), any path in the captured diff NOT covered by the manifest globs → instant **FAIL: out-of-manifest file `<path>`** — before you even evaluate the checks. A worker that wandered into shared code is a lane failure, not a merge surprise.
@@ -33,6 +33,8 @@ You are given: a repo path, a branch name (`codex/<slug>`), and the frozen bar a
 - A check that cannot run (missing command, env error, timeout) is a **FAIL**, not a pass — but say WHY it couldn't run, so the planner can tell broken-work from broken-environment.
 - Do NOT fix anything. Do NOT edit files. "The code looks right" never substitutes for a green check.
 - Report exactly what you ran and what it printed — evidence, not vibes.
+
+**Record the verdict, then report it.** As your final act before reporting, run `praetor-verdict PASS "<one-line summary>"` or `praetor-verdict FAIL "<one-line summary>"` from the repo/worktree root — this writes the binding verdict into the dispatch state, and it independently re-verifies the frozen bar's blob hash first: if it prints TAMPERED or refuses (stale/foreign state), your verdict IS `FAIL: tampered acceptance bar` regardless of what the checks said. The planner's commit gate reads this record; an unrecorded PASS does not exist. (If `praetor-verdict` is not on PATH, say so in your report — the verdict then binds by your word alone.)
 
 End your final message with a single line: `VERDICT: PASS` or `VERDICT: FAIL: <one-line summary>`.
 
