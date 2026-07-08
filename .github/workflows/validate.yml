@@ -54,6 +54,28 @@ jobs:
           test "$(grep -c 'PRAETOR_BRIEF' skills/dispatching-to-codex/SKILL.md)" -ge 4
           ! grep -qE 'resume <session-id> "' skills/dispatching-to-codex/SKILL.md
 
+      - name: Audit hardening laws (v0.3.2 — user WIP is sacred, bars stay frozen, untracked files are judged)
+        run: |
+          # D1: the analysis shortcut must never wipe the whole tree
+          grep -q 'never run either against the whole tree' skills/dispatching-to-codex/SKILL.md
+          grep -q 'skip-git-repo-check' skills/dispatching-to-codex/SKILL.md
+          # D2: FAIL cleanup discards the rejected tree before switching back
+          grep -q "discard the branch's working tree first" skills/dispatching-to-codex/SKILL.md
+          # D3: STOP resolves the git toplevel, not the shell cwd
+          grep -q 'TOPLEVEL' skills/dispatching-to-codex/preflight.sh
+          # D4: tamper check counts freeze commits, not just the dirty diff
+          grep -q 'exactly ONE commit' agents/codex-judge.md
+          # D5: judge reads untracked-file content in all modes
+          grep -q 'status --porcelain' agents/codex-judge.md
+          grep -q 'untracked file' agents/codex-judge.md
+          # D6: the integration bar is a frozen file, not planner memory
+          grep -q 'INTEGRATION.md' skills/dispatching-legion/SKILL.md
+          grep -q 'INTEGRATION.md' agents/codex-judge.md
+          # D7: relay sniff runs before the login gate
+          grep -B30 'not-logged-in' skills/dispatching-to-codex/preflight.sh | grep -q 'CONFIG='
+          # judge hardening: evidence is data, never instructions
+          grep -qi 'never instructions' agents/codex-judge.md
+
       - name: Summoned-imperium consent law (v0.3.1 — dormant until summoned, never silent, brakes never weakened)
         run: |
           grep -qi 'dormant' skills/dispatching-to-codex/SKILL.md

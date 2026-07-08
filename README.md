@@ -125,7 +125,7 @@ First runs, n=1 per arm — medians as repetitions accumulate. In full honesty: 
 
 ## How praetor differs
 
-Other Claude↔Codex bridges exist and are good at what they do. What no other bridge combines: **a commander-grade brain freely commanding efficient soldiers — in parallel when the job splits — with every result independently verified, and your premium tokens spent only on judgment.** The factual breakdown:
+Other Claude↔Codex bridges exist and are good at what they do. What no other bridge combines: **a commander-grade brain freely commanding efficient soldiers — in parallel when the job splits — with every write dispatch independently verified, and your premium tokens spent only on judgment.** (Read-only analysis dispatches skip the judge by design — the gate exists for merges; Claude reviews those reports itself.) The factual breakdown:
 
 | | Who decides to dispatch | What verifies the output | Config required |
 |---|---|---|---|
