@@ -166,12 +166,17 @@ else
   codex exec ${FLAGS} --sandbox "${SANDBOX}" ${SKIPGIT} - < "${BRIEF}" 2>.codex/codex.err &
 fi
 CPID=$!
+TFLAG=".codex/.timeout-fired"
+rm -f "${TFLAG}"
 (
   ELAPSED=0
   while kill -0 "${CPID}" 2>/dev/null; do
     sleep 1
     ELAPSED=$((ELAPSED+1))
     if [ "${ELAPSED}" -ge "${TIMEOUT}" ]; then
+      # Record the kill in a flag file — the child's exit code alone is a race
+      # (a TERM-killed grandchild can let the parent exit 0 first; found on CI).
+      : > "${TFLAG}"
       # Children first (they inherit our stdout and would hold the pipe), then the leader.
       pkill -TERM -P "${CPID}" 2>/dev/null
       kill -TERM "${CPID}" 2>/dev/null
@@ -187,6 +192,10 @@ wait "${CPID}"; RC=$?
 wait "${WPID}" 2>/dev/null
 WALL=$(( $(date +%s) - START ))
 
+if [ -f "${TFLAG}" ]; then
+  rm -f "${TFLAG}"
+  RC=143   # the watchdog fired — treat as a timeout kill whatever the child reported
+fi
 if [ ${RC} -eq 143 ] || [ ${RC} -eq 137 ]; then
   echo "praetor-dispatch: TIMEOUT-KILLED after ${TIMEOUT}s (attempt ${ATTEMPTS}/3, consumed). Reset the tree, then retry with a FRESH dispatch — never resume a killed session." >&2
   RC=124
