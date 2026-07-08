@@ -1,2 +1,0 @@
-alpha src/alpha/a.js
-beta src/*/a.js
